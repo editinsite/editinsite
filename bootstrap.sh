@@ -13,5 +13,9 @@ rm /tmp/go.tar.gz
 printf "\n" >> $PROFILE
 printf "# golang configuration\n" >> $PROFILE
 printf "export GOROOT=$GOTARGET/go\n" >> $PROFILE
-printf "export GOPATH=/vagrant/go\n" >> $PROFILE
-printf "export PATH=\$PATH:$GOTARGET/go/bin:\$GOPATH/bin\n" >> $PROFILE
+printf "export GOPATH=\$HOME\n" >> $PROFILE
+printf "export PATH=\$PATH:$GOTARGET/go/bin\n" >> $PROFILE
+
+chown ubuntu:ubuntu /home/ubuntu/src
+chown ubuntu:ubuntu /home/ubuntu/src/github.com
+chown ubuntu:ubuntu /home/ubuntu/src/github.com/editinsite
