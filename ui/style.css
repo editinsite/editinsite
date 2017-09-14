@@ -1,0 +1,38 @@
+#files {
+  position: absolute;
+  left: 0;
+  right: 200px;
+  top: 30px;
+  bottom: 30px;
+}
+#files a {
+  display: block;
+  padding: 10px 5px;
+  padding-left: 30px;
+  text-decoration: none;
+}
+#files a.selected {
+  background: #f1f1f1;
+}
+
+#editor {
+  position: absolute;
+  left: 200px;
+  right: 30px;
+  top: 30px;
+  bottom: 30px;
+}
+textarea {
+  position: absolute;
+  top: 0;
+  bottom: 70px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px;
+}
+input[type=submit] {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  padding: 10px 100px;
+}

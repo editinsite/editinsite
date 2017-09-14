@@ -19,3 +19,7 @@ printf "export PATH=\$PATH:$GOTARGET/go/bin\n" >> $PROFILE
 chown ubuntu:ubuntu /home/ubuntu/src
 chown ubuntu:ubuntu /home/ubuntu/src/github.com
 chown ubuntu:ubuntu /home/ubuntu/src/github.com/editinsite
+
+# switch to the "ubuntu" user to do the rest
+# run the "export"s in .profile to apply to current session; start server
+su ubuntu -c "source ~/.profile && bash \$GOPATH/src/github.com/editinsite/editinsite/runserver.sh"
