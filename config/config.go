@@ -2,10 +2,11 @@
 package config
 
 import (
-	"github.com/editinsite/editinsite/project"
+	"encoding/json"
+	"os"
 )
 
-const path = "settings.json"
+const File = "editinsite.json"
 
 // Configuration for development with editinsite.
 var Values = struct {
@@ -13,21 +14,30 @@ var Values = struct {
 	Port int `json:"port"`
 
 	// Projects is a list of development workspaces.
-	Projects []project.Workspace `json:"projects"`
+	Projects []string `json:"projects"`
 }{
 	Port: 8080,
-	Projects: []project.Workspace{
-		project.Workspace{
-			Name: "example",
-			Path: "/home/ubuntu/src/github.com/editinsite/editinsite/example/",
-		},
-	},
 }
 
-func Load() {
-	// todo
+// Load the settings JSON if possible, or fall back to defaults.
+func Load() error {
+	file, err := os.Open("./" + File)
+	defer file.Close()
+	if err == nil {
+		err = json.NewDecoder(file).Decode(&Values)
+	} else if os.IsNotExist(err) {
+		err = nil
+	}
+	return err
 }
 
-func Save() {
-	// todo
+func Save() error {
+	file, err := os.Create("./" + File)
+	defer file.Close()
+	if (err == nil) {
+		enc := json.NewEncoder(file)
+		enc.SetIndent("", "  ")
+		err = enc.Encode(Values)
+	}
+	return err
 }

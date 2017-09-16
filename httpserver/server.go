@@ -4,11 +4,11 @@ package httpserver
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/editinsite/editinsite/config"
-	"github.com/editinsite/editinsite/project"
-	"log"
 	"net/http"
 	"strings"
+
+	"github.com/editinsite/editinsite/config"
+	"github.com/editinsite/editinsite/project"
 )
 
 func fileHandler(w http.ResponseWriter, r *http.Request) {
@@ -18,12 +18,12 @@ func fileHandler(w http.ResponseWriter, r *http.Request) {
 		projEnd := strings.IndexByte(path, '/')
 		if projEnd == -1 || projEnd == len(path)-1 {
 			//projectName := path[2:]
-			project := config.Values.Projects[0]
+			project := project.Workspaces["example"]
 			listHandler(w, r, project)
 		} else {
 			//projectName := path[2:projEnd]
 			filePath := path[projEnd+1:]
-			project := config.Values.Projects[0]
+			project := project.Workspaces["example"]
 			if r.Method == "POST" {
 				saveHandler(w, r, project, filePath)
 			} else {
@@ -33,7 +33,7 @@ func fileHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func listHandler(w http.ResponseWriter, r *http.Request, p project.Workspace) {
+func listHandler(w http.ResponseWriter, r *http.Request, p *project.Workspace) {
 	list, err := p.Files()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -43,7 +43,7 @@ func listHandler(w http.ResponseWriter, r *http.Request, p project.Workspace) {
 	json.NewEncoder(w).Encode(list)
 }
 
-func loadHandler(w http.ResponseWriter, r *http.Request, p project.Workspace,
+func loadHandler(w http.ResponseWriter, r *http.Request, p *project.Workspace,
 	file string) {
 	f, err := p.LoadFile(file)
 	if err != nil {
@@ -54,7 +54,7 @@ func loadHandler(w http.ResponseWriter, r *http.Request, p project.Workspace,
 	json.NewEncoder(w).Encode(f)
 }
 
-func saveHandler(w http.ResponseWriter, r *http.Request, p project.Workspace,
+func saveHandler(w http.ResponseWriter, r *http.Request, p *project.Workspace,
 	file string) {
 	body := r.FormValue("body")
 	f := &project.File{Name: file, Path: file, Body: body}
@@ -65,9 +65,9 @@ func saveHandler(w http.ResponseWriter, r *http.Request, p project.Workspace,
 	}
 }
 
-func Start() {
+func Start() error {
 	port := fmt.Sprintf(":%d", config.Values.Port)
 	http.HandleFunc("/project/", fileHandler)
 	http.Handle("/", http.FileServer(http.Dir("ui")))
-	log.Fatal(http.ListenAndServe(port, nil))
+	return http.ListenAndServe(port, nil)
 }

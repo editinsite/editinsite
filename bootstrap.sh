@@ -28,6 +28,9 @@ su ubuntu -c "source ~/.profile && go install github.com/editinsite/editinsite/c
 if ! [ -d /home/ubuntu/bin/ui ]; then
   ln -s /home/ubuntu/src/github.com/editinsite/editinsite/ui /home/ubuntu/bin/ui
 fi
+if ! [ -d /home/ubuntu/bin/editinsite.json ]; then
+  ln -s /home/ubuntu/src/github.com/editinsite/editinsite/editinsite.json /home/ubuntu/bin/editinsite.json
+fi
 
 # now daemonize the server
 DAEMON=/lib/systemd/system/editinsite.service
