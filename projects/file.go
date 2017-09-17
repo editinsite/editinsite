@@ -1,5 +1,5 @@
 // Files within a web development project.
-package project
+package projects
 
 import (
 	"io/ioutil"

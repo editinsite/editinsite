@@ -8,14 +8,14 @@ import (
 	"strings"
 
 	"github.com/editinsite/editinsite/config"
-	"github.com/editinsite/editinsite/project"
+	"github.com/editinsite/editinsite/projects"
 )
 
 func projectHandler(w http.ResponseWriter, r *http.Request) {
 	if len(r.URL.Path) > len("/projects/") {
 		fileHandler(w, r)
 	} else {
-		list := project.SortByID()
+		list := projects.SortByID()
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(list)
 	}
@@ -29,7 +29,7 @@ func fileHandler(w http.ResponseWriter, r *http.Request) {
 			projEnd = len(path)
 		}
 		projectID := path[0:projEnd]
-		project := project.Workspaces[projectID]
+		project := projects.Registry[projectID]
 		if projEnd >= len(path)-1 {
 			listHandler(w, r, project)
 		} else {
@@ -43,7 +43,7 @@ func fileHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func listHandler(w http.ResponseWriter, r *http.Request, p *project.Workspace) {
+func listHandler(w http.ResponseWriter, r *http.Request, p *projects.Workspace) {
 	list, err := p.Files()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -53,7 +53,7 @@ func listHandler(w http.ResponseWriter, r *http.Request, p *project.Workspace) {
 	json.NewEncoder(w).Encode(list)
 }
 
-func loadHandler(w http.ResponseWriter, r *http.Request, p *project.Workspace,
+func loadHandler(w http.ResponseWriter, r *http.Request, p *projects.Workspace,
 	file string) {
 	f, err := p.LoadFile(file)
 	if err != nil {
@@ -64,10 +64,10 @@ func loadHandler(w http.ResponseWriter, r *http.Request, p *project.Workspace,
 	json.NewEncoder(w).Encode(f)
 }
 
-func saveHandler(w http.ResponseWriter, r *http.Request, p *project.Workspace,
+func saveHandler(w http.ResponseWriter, r *http.Request, p *projects.Workspace,
 	file string) {
 	body := r.FormValue("body")
-	f := &project.File{Name: file, Path: file, Body: body}
+	f := &projects.File{Name: file, Path: file, Body: body}
 	err := p.SaveFile(f)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

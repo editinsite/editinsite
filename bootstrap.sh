@@ -22,7 +22,7 @@ chown ubuntu:ubuntu /home/ubuntu/src/github.com/editinsite
 
 # switch to the "ubuntu" user to do the build
 # run the "export"s in .profile to apply to current session
-su ubuntu -c "source ~/.profile && go install github.com/editinsite/editinsite/cmd/devserver"
+su ubuntu -c "source ~/.profile && go install github.com/editinsite/editinsite"
 
 # check for either directory or symlink to "ui" directory
 if ! [ -d /home/ubuntu/bin/ui ]; then
@@ -36,7 +36,7 @@ fi
 DAEMON=/lib/systemd/system/editinsite.service
 printf "[Unit]\nDescription=EditInsite server\n\n" >> $DAEMON
 printf "[Service]\nType=simple\nUser=ubuntu\nGroup=ubuntu\n" >> $DAEMON
-printf "WorkingDirectory=/home/ubuntu/bin\nExecStart=/home/ubuntu/bin/devserver\n\n" >> $DAEMON
+printf "WorkingDirectory=/home/ubuntu/bin\nExecStart=/home/ubuntu/bin/editinsite\n\n" >> $DAEMON
 printf "[Install]\nWantedBy=multi-user.target" >> $DAEMON
 systemctl enable editinsite
 systemctl start editinsite
