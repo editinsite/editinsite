@@ -11,19 +11,29 @@ import (
 	"github.com/editinsite/editinsite/project"
 )
 
+func projectHandler(w http.ResponseWriter, r *http.Request) {
+	if len(r.URL.Path) > len("/projects/") {
+		fileHandler(w, r)
+	} else {
+		list := project.SortByID()
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(list)
+	}
+}
+
 func fileHandler(w http.ResponseWriter, r *http.Request) {
-	// Skip the "/project/" text that begins the URL
-	path := r.URL.Path[9:]
-	if !strings.Contains(path, "..") {
+	path := r.URL.Path[len("/projects/"):]
+	if !strings.Contains(path, "..") { // for security
 		projEnd := strings.IndexByte(path, '/')
-		if projEnd == -1 || projEnd == len(path)-1 {
-			//projectName := path[2:]
-			project := project.Workspaces["example"]
+		if projEnd == -1 {
+			projEnd = len(path)
+		}
+		projectID := path[0:projEnd]
+		project := project.Workspaces[projectID]
+		if projEnd >= len(path)-1 {
 			listHandler(w, r, project)
 		} else {
-			//projectName := path[2:projEnd]
 			filePath := path[projEnd+1:]
-			project := project.Workspaces["example"]
 			if r.Method == "POST" {
 				saveHandler(w, r, project, filePath)
 			} else {
@@ -67,7 +77,7 @@ func saveHandler(w http.ResponseWriter, r *http.Request, p *project.Workspace,
 
 func Start() error {
 	port := fmt.Sprintf(":%d", config.Values.Port)
-	http.HandleFunc("/project/", fileHandler)
+	http.HandleFunc("/projects/", projectHandler)
 	http.Handle("/", http.FileServer(http.Dir("ui")))
 	return http.ListenAndServe(port, nil)
 }

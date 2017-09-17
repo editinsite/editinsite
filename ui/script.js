@@ -2,7 +2,7 @@ var _currProject, _currFile;
 
 $(document).ready(function () {
   registerEvents();
-  getFileList();
+  getProjectList();
 });
 
 function registerEvents () {
@@ -10,8 +10,15 @@ function registerEvents () {
   $('#editor').submit(saveFile);
 }
 
+function getProjectList () {
+  $.getJSON("/projects", function (projects) {
+    _currProject = projects[0];
+    getFileList();
+  });
+}
+
 function getFileList () {
-  $.getJSON("/project/example", function (files) {
+  $.getJSON("/projects/" + _currProject.id, function (files) {
     var $list = $('#files');
     for (var i = 0; i < files.length; i++)
       $list.append('<a href="#">' + files[i] + '</a>');
@@ -25,7 +32,7 @@ function fileNameClick (e) {
   $fileLink.addClass('selected').siblings().removeClass('selected')
   var name = $fileLink.text();
   _currFile = null;
-  $.getJSON("/project/example/" + name, showFile);
+  $.getJSON("/projects/" + _currProject.id + "/" + name, showFile);
 }
 
 function showFile (file) {
@@ -37,7 +44,7 @@ function saveFile (e) {
   e.preventDefault();
 
   $('input[type=submit]').text('Saving...');
-  $.post("/project/example/" + _currFile.path, {
+  $.post("/projects/" + _currProject.id + "/" + _currFile.path, {
       body: $('textarea').val()
     },
     function (files) {
