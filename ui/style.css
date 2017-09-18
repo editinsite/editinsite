@@ -1,38 +1,106 @@
+body {
+  font-size: 14px;
+  font-family: -apple-system,BlinkMacSystemFont,Segoe WPC,Segoe UI,HelveticaNeue-Light,Ubuntu,Droid Sans,sans-serif;
+  background: #1e1e1e;
+  color: #d4d4d4;
+}
 #files {
   position: absolute;
   left: 0;
-  right: 200px;
+  width: 200px;
   top: 30px;
   bottom: 30px;
+  overflow: auto;
 }
 #files a {
   display: block;
-  padding: 10px 5px;
+  padding: 5px 5px;
   padding-left: 30px;
   text-decoration: none;
+  color: inherit;
 }
 #files a.selected {
-  background: #f1f1f1;
+  background: #383838;
 }
 
-#editor {
+#edit-panel {
   position: absolute;
   left: 200px;
   right: 30px;
   top: 30px;
   bottom: 30px;
 }
-textarea {
+.editor-frame {
   position: absolute;
   top: 0;
   bottom: 70px;
   width: 100%;
-  box-sizing: border-box;
-  padding: 10px;
 }
 input[type=submit] {
   position: absolute;
   bottom: 0;
   right: 0;
   padding: 10px 100px;
+}
+
+#editor {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+.editor-frame .loading {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  background-color: rgba(30,30,30,.5);
+  display: none;
+  z-index: 100;
+}
+.editor-frame .progress {
+  width: 50%;
+  height: 9px;
+  margin: 15% auto 0;
+}
+.editor-frame .progress .bar {
+  height: 100%;
+  background-image: -webkit-gradient(linear,0 100%,100% 0,color-stop(.25,rgba(255,255,255,.15)),color-stop(.25,transparent),color-stop(.5,transparent),color-stop(.5,rgba(255,255,255,.15)),color-stop(.75,rgba(255,255,255,.15)),color-stop(.75,transparent),to(transparent));background-image:-webkit-linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent);
+  background-image: -moz-linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent);
+  background-image: -o-linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent);
+  background-image: linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent);
+  -webkit-background-size: 40px 40px;
+  -moz-background-size: 40px 40px;
+  -o-background-size: 40px 40px;
+  background-size: 40px 40px;
+  background-color: #007fff;
+  -webkit-animation: progress-bar-stripes 1s linear infinite;
+  -moz-animation: progress-bar-stripes 1s linear infinite;
+  -ms-animation: progress-bar-stripes 1s linear infinite;
+  -o-animation: progress-bar-stripes 1s linear infinite;
+  animation: progress-bar-stripes 1s linear infinite
+}
+@-webkit-keyframes progress-bar-stripes {
+  from { background-position: 40px 0 }
+  to { background-position: 0 0 }
+}
+@-moz-keyframes progress-bar-stripes {
+  from { background-position: 40px 0 }
+  to { background-position:0 0 }
+}
+@-ms-keyframes progress-bar-stripes {
+  from { background-position: 40px 0 }
+  to { background-position:0 0 }
+}
+@-o-keyframes progress-bar-stripes {
+  from { background-position:0 0 }
+  to { background-position: 40px 0 }
+}
+@keyframes progress-bar-stripes {
+  from { background-position: 40px 0 }
+  to { background-position: 0 0 }
+}
+#editor .alert {
+  margin: 18% auto 0;
+  width: 30%;
+  text-align: center;
+  font-size: 2em;
 }
