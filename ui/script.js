@@ -23,11 +23,32 @@ function getProjectList () {
   });
 }
 
-function getFileList () {
-  $.getJSON('/projects/' + _currProject.id, function (files) {
-    var $list = $('#files');
-    for (var i = 0; i < files.length; i++)
-      $list.append('<a href="#">' + files[i] + '</a>');
+function getFileList (subDir) {
+  var fileList;
+
+  function showList () {
+    if (fileList && window.monaco) {
+      var $list = $('#files');
+      for (var i = 0; i < fileList.length; i++) {
+        var name = fileList[i];
+        var file = {
+            name: name,
+            parent: subDir,
+            type: fileTypeFromName(name)
+          };
+        $('<a href="' + fileUrl(file) + '">' + name + '</a>')
+          .data('file', file)
+          .appendTo($list);
+      }
+    }
+  }
+
+  if (!window.monaco) {
+    require(['vs/editor/editor.main'], showList);
+  }
+  $.getJSON(fileUrl(subDir), function (files) {
+    fileList = files;
+    showList();
   });
 }
 
@@ -37,79 +58,62 @@ function fileNameClick (e) {
   var $fileLink = $(this);
   if (!$fileLink.hasClass('selected')) {
     $fileLink.addClass('selected').siblings().removeClass('selected')
-    var name = $fileLink.text();
-    loadFile(name);
+    var file = $fileLink.data('file');
+    openFile(file);
   }
 }
 
-function loadFile (path) {
-  _currFile = null;
-  showLoading('editor');
-  $.getJSON('/projects/' + _currProject.id + '/' + path,
-    function (file) {
-      require(['vs/editor/editor.main'], function() {
-        file.type = detectFileType(file);
-        showFile(file);
-      });
-    })
-    .fail(function() { showFile(null); });
-}
-
-function showFile (file) {
+function openFile (file) {
   _currFile = file;
+  showLoading('editor');
 
-  require(['vs/editor/editor.main'], function() {
-    if (!file) {
-      if (_editor) {
-        if (_editor.getModel()) {
-          _editor.getModel().dispose();
-        }
-        _editor.dispose();
-        _editor = null;
-      }
-      hideLoading('editor');
-      $('#editor').empty();
-      $('#editor').append('<p class="alert">File could not be loaded.</p>');
-      return;
-    }
-  
-    if (!_editor) {
-      $('#editor').empty();
-      _editor = monaco.editor.create(document.getElementById('editor'), {
-        model: null,
-        theme: 'vs-dark'
-      });
-    }
-
-    var oldModel = _editor.getModel();
-    var newModel = monaco.editor.createModel(file.body, file.type.id);
-    _editor.setModel(newModel);
-    if (oldModel) {
-      oldModel.dispose();
-    }
+  downloadFile(file, function (file) {
     hideLoading('editor');
+    showInEditor(file);
   });
 }
 
 function saveFile (e) {
-  e.preventDefault();
+  e && e.preventDefault();
 
   if (_editor) {
     $('input[type=submit]').text('Saving...');
-    $.post("/projects/" + _currProject.id + "/" + _currFile.path, {
-        body: _editor.getValue()
-      },
-      function (files) {
-        $('input[type=submit]').text('Save');
-      },
-      'json');
+    _currFile.body = _editor.getValue();
+    uploadFile(_currFile, function () {
+      $('input[type=submit]').text('Save');
+    });
   }
 }
 
-function detectFileType (file) {
-  var ext, extStart = file.name.lastIndexOf('.');
+function downloadFile (file, callback) {
+  var oReq = new XMLHttpRequest();
+  
+  oReq.onload = function (oEvent) {
+    file.body = oReq.response;
+    callback(file);
+  };
+  
+  oReq.open("GET", fileUrl(file));
+  oReq.responseType = "text";
+  oReq.send();
+}
+
+function uploadFile (file, callback) {
+  var oReq = new XMLHttpRequest();
+  oReq.onload = callback;
+  oReq.open("POST", fileUrl(file));
+  oReq.send(new Blob([file.body], { type: 'text/plain' }));
+}
+
+function fileUrl (file) {
+  return file ? (fileUrl(file.parent) + file.name)
+    : ('/projects/' + _currProject.id + '/');
+}
+
+function fileTypeFromName (fileName) {
+  var ext, extStart = fileName.lastIndexOf('.');
   if (extStart !== -1) {
-    ext = file.name.slice(extStart).toLowerCase();
+    ext = fileName.slice(extStart).toLowerCase();
   }
   var exts = _extensions || loadExtensions();
   return ext && exts[ext] || exts['.txt'];
@@ -132,6 +136,36 @@ function loadExtensions () {
 function onResize () {
   if (_editor) {
     _editor.layout();
+  }
+}
+
+function showInEditor (file) {
+  if (!file) {
+    if (_editor) {
+      if (_editor.getModel()) {
+        _editor.getModel().dispose();
+      }
+      _editor.dispose();
+      _editor = null;
+    }
+    $('#editor').empty();
+    $('#editor').append('<p class="alert">File could not be loaded.</p>');
+    return;
+  }
+
+  if (!_editor) {
+    $('#editor').empty();
+    _editor = monaco.editor.create(document.getElementById('editor'), {
+      model: null,
+      theme: 'vs-dark'
+    });
+  }
+
+  var oldModel = _editor.getModel();
+  var newModel = monaco.editor.createModel(file.body, file.type.id);
+  _editor.setModel(newModel);
+  if (oldModel) {
+    oldModel.dispose();
   }
 }
 

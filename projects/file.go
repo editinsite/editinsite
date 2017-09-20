@@ -2,38 +2,87 @@
 package projects
 
 import (
+	"io"
 	"io/ioutil"
+	"net/http"
+	"os"
 	"path/filepath"
 )
 
-type File struct {
-	Name string `json:"name"`
-	Path string `json:"path"`
-	Body string `json:"body"`
-}
+// TODO:
+// - cache metadata in Files()? (for ServeFile, IsDir)
 
-func (w *Workspace) Files() (*[]string, error) {
-	files, err := ioutil.ReadDir(w.Path)
+// Files returns an alphabetical list of files and directories at the workspace root
+// or given sub-directory.
+func (w *Workspace) Files(subDir string) ([]string, error) {
+	path := filepath.Join(w.Path, subDir)
+	files, err := ioutil.ReadDir(path)
 	if err != nil {
 		return nil, err
 	}
 	fileList := []string{}
 	for _, f := range files {
-		fileList = append(fileList, f.Name())
+		name := f.Name()
+		if f.IsDir() {
+			name += "/"
+		}
+		fileList = append(fileList, name)
 	}
-	return &fileList, nil
+	return fileList, nil
 }
 
-func (w *Workspace) LoadFile(path string) (*File, error) {
-	filename := w.Path + "/" + path
-	body, err := ioutil.ReadFile(filename)
+func (w *Workspace) ServeFile(wtr http.ResponseWriter, req *http.Request, path string) error {
+	path = filepath.Join(w.Path, path)
+	info, err := os.Stat(path)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	name := filepath.Base(path)
-	return &File{Name: name, Path: path, Body: string(body)}, nil
+	file, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	http.ServeContent(wtr, req, info.Name(), info.ModTime(), file)
+	return nil
 }
 
-func (p *Workspace) SaveFile(file *File) error {
-	return ioutil.WriteFile(p.Path+"/"+file.Path, []byte(file.Body), 0600)
+func (w *Workspace) LoadFile(path string, dst io.Writer) error {
+	path = filepath.Join(w.Path, path)
+	file, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	if _, err = io.Copy(dst, file); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (w *Workspace) SaveFile(path string, src io.Reader) (err error) {
+	path = filepath.Join(w.Path, path)
+	file, err := os.Create(path)
+	if err != nil {
+		return
+	}
+	defer func() {
+		cerr := file.Close()
+		if err == nil {
+			err = cerr
+		}
+	}()
+	if _, err = io.Copy(file, src); err != nil {
+		return
+	}
+	err = file.Sync()
+	return
+}
+
+func (w *Workspace) IsDir(path string) (bool, error) {
+	path = filepath.Join(w.Path, path)
+	file, err := os.Stat(path)
+	if err != nil {
+		return false, err
+	}
+	return file.IsDir(), nil
 }

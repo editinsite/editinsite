@@ -22,6 +22,7 @@ func LoadAll(paths []string) {
 
 func Load(path string) (*Workspace, error) {
 	// todo: load and cache project settings file
+	path = filepath.Clean(path)
 	id := filepath.Base(path)
 	project := &Workspace{
 		ID:   id,

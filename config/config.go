@@ -21,23 +21,24 @@ var Values = struct {
 
 // Load the settings JSON if possible, or fall back to defaults.
 func Load() error {
-	file, err := os.Open("./" + File)
-	defer file.Close()
-	if err == nil {
-		err = json.NewDecoder(file).Decode(&Values)
-	} else if os.IsNotExist(err) {
-		err = nil
+	file, err := os.Open(File)
+	if err != nil {
+		if os.IsNotExist(err) {
+			err = nil
+		}
+		return err
 	}
-	return err
+	defer file.Close()
+	return json.NewDecoder(file).Decode(&Values)
 }
 
 func Save() error {
-	file, err := os.Create("./" + File)
-	defer file.Close()
-	if (err == nil) {
-		enc := json.NewEncoder(file)
-		enc.SetIndent("", "  ")
-		err = enc.Encode(Values)
+	file, err := os.Create(File)
+	if err != nil {
+		return err
 	}
-	return err
+	defer file.Close()
+	enc := json.NewEncoder(file)
+	enc.SetIndent("", "  ")
+	return enc.Encode(Values)
 }

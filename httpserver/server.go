@@ -23,52 +23,65 @@ func projectHandler(w http.ResponseWriter, r *http.Request) {
 
 func fileHandler(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Path[len("/projects/"):]
-	if !strings.Contains(path, "..") { // for security
-		projEnd := strings.IndexByte(path, '/')
-		if projEnd == -1 {
-			projEnd = len(path)
+	if strings.Contains(path, "..") {
+		// for security
+		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+		return
+	}
+
+	projEnd := strings.IndexByte(path, '/')
+	if projEnd == -1 {
+		http.Redirect(w, r, r.URL.Path+"/", http.StatusMovedPermanently)
+		return
+	}
+	projectID := path[0:projEnd]
+	project := projects.Registry[projectID]
+
+	filePath := path[projEnd:]
+	isDir := filePath[len(filePath)-1] == '/'
+	if !isDir {
+		var err error
+		isDir, err = project.IsDir(filePath)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
-		projectID := path[0:projEnd]
-		project := projects.Registry[projectID]
-		if projEnd >= len(path)-1 {
-			listHandler(w, r, project)
+		if isDir {
+			http.Redirect(w, r, r.URL.Path+"/", http.StatusMovedPermanently)
+			return
+		}
+	}
+	if isDir {
+		listHandler(w, r, project, filePath)
+	} else {
+		if r.Method == "POST" {
+			saveHandler(w, r, project, filePath)
 		} else {
-			filePath := path[projEnd+1:]
-			if r.Method == "POST" {
-				saveHandler(w, r, project, filePath)
-			} else {
-				loadHandler(w, r, project, filePath)
-			}
+			loadHandler(w, r, project, filePath)
 		}
 	}
 }
 
-func listHandler(w http.ResponseWriter, r *http.Request, p *projects.Workspace) {
-	list, err := p.Files()
+func listHandler(w http.ResponseWriter, r *http.Request, p *projects.Workspace, subDir string) {
+	list, err := p.Files(subDir)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
+	//w.Header().Set("Content-Length", strconv.Itoa(len(buffer)))
 	json.NewEncoder(w).Encode(list)
 }
 
-func loadHandler(w http.ResponseWriter, r *http.Request, p *projects.Workspace,
-	file string) {
-	f, err := p.LoadFile(file)
-	if err != nil {
+func loadHandler(w http.ResponseWriter, r *http.Request, p *projects.Workspace, file string) {
+	if err := p.ServeFile(w, r, file); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(f)
 }
 
-func saveHandler(w http.ResponseWriter, r *http.Request, p *projects.Workspace,
-	file string) {
-	body := r.FormValue("body")
-	f := &projects.File{Name: file, Path: file, Body: body}
-	err := p.SaveFile(f)
+func saveHandler(w http.ResponseWriter, r *http.Request, p *projects.Workspace, file string) {
+	err := p.SaveFile(file, r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
