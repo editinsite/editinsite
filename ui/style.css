@@ -27,18 +27,26 @@ body {
   bottom: 30px;
   overflow: auto;
 }
-#files a {
+#files ul {
+  list-style: none;
+  padding: 0;
+  padding-left: 7px;
+}
+#files .filelink {
   display: block;
-  padding: 5px 5px;
-  padding-left: 30px;
+  padding: 5px;
   text-decoration: none;
   color: inherit;
 }
-#files a.selected {
+#files .filelink.selected {
   background: #383838;
 }
+#files .filelink.expanded .fa:before {
+  content: '\f107' /* angle-down */;
+  margin-left: -0.2em;
+}
 #files .fa {
-  margin-right: 3px;
+  width: 0.7em;
   opacity: 0.5;
 }
 

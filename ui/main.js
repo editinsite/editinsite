@@ -11,7 +11,7 @@ $(document).ready(function () {
 });
 
 function registerEvents () {
-	$('#files').on('click', 'a', fileNameClick);
+	$('#files').on('click', '.filelink', fileNameClick);
 	$('input[type=submit]').click(saveFile);
 	$(window).resize(onResize);
 }
@@ -19,33 +19,47 @@ function registerEvents () {
 function getProjectList () {
 	projects.getList(function (projects) {
 		_currProject = projects[0];
-		getFileList();
+		getFileList($('#files'));
 	});
 }
 
-function getFileList (subDir) {
+function getFileList ($listParent, subDir) {
 	_currProject.getFileList(subDir, function (fileList) {
-		var $list = $('#files');
+		var $list = $('<ul class="filelist"></ul>');
 		for (var i = 0; i < fileList.length; i++) {
 			var file = fileList[i],
 				icon = '';
 			if (file.isDir)
 				icon = '<i class="fa fa-angle-right"></i>';
-			$('<a href="' + _currProject.fileUrl(file) + '">' + icon + file.name + '</a>')
-				.data('file', file)
-				.appendTo($list);
+			$('<li></li>').append(
+				$('<a class="filelink" href="' + _currProject.fileUrl(file)
+					+ '">' + icon + file.name + '</a>')
+					.data('file', file)
+			).appendTo($list);
 		}
+		$list.appendTo($listParent);
 	});
 }
 
 function fileNameClick (e) {
 	e.preventDefault();
 
-	var $fileLink = $(this);
-	if (!$fileLink.hasClass('selected')) {
-		$fileLink.addClass('selected').siblings().removeClass('selected')
-		var file = $fileLink.data('file');
-		openFile(file);
+	var $fileLink = $(this),
+		file = $fileLink.data('file');
+	if (file.isDir) {
+		var $fileLI = $fileLink.parent();
+		if ($fileLink.hasClass('expanded'))
+			$fileLI.children('.filelist').remove();
+		else
+			getFileList($fileLI, file);
+		$fileLink.toggleClass('expanded');
+	}
+	else {
+		if (!$fileLink.hasClass('selected')) {
+			$('#files .selected').removeClass('selected');
+			$fileLink.addClass('selected');
+			openFile(file);
+		}
 	}
 }
 
