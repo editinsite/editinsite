@@ -4,12 +4,26 @@ package httpserver
 import (
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"net/http"
 	"strings"
 
 	"github.com/editinsite/editinsite/config"
 	"github.com/editinsite/editinsite/projects"
 )
+
+var dirListTemplate = template.Must(template.New("dir").Parse(`<!doctype html>
+	<html>
+	<head>
+	  <meta charset="utf-8">
+	  <title>Directory listing</title>
+	</head>
+	<body>
+	  <ul>
+	  	{{range .}}<li><a href="{{.}}">{{.}}</a></li>{{end}}
+	  </ul>
+	</body>
+	</html>`))
 
 func projectHandler(w http.ResponseWriter, r *http.Request) {
 	if len(r.URL.Path) > len("/projects/") {
@@ -68,9 +82,17 @@ func listHandler(w http.ResponseWriter, r *http.Request, p *projects.Workspace, 
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	//w.Header().Set("Content-Length", strconv.Itoa(len(buffer)))
-	json.NewEncoder(w).Encode(list)
+	accept := r.Header.Get("Accept")
+	if strings.Contains(accept, "application/json") {
+		w.Header().Set("Content-Type", "application/json")
+		err = json.NewEncoder(w).Encode(list)
+	} else {
+		err = dirListTemplate.Execute(w, list)
+	}
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 func loadHandler(w http.ResponseWriter, r *http.Request, p *projects.Workspace, file string) {
