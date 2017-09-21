@@ -27,8 +27,11 @@ function getFileList (subDir) {
 	_currProject.getFileList(subDir, function (fileList) {
 		var $list = $('#files');
 		for (var i = 0; i < fileList.length; i++) {
-			var file = fileList[i];
-			$('<a href="' + _currProject.fileUrl(file) + '">' + file.name + '</a>')
+			var file = fileList[i],
+				icon = '';
+			if (file.isDir)
+				icon = '<i class="fa fa-angle-right"></i>';
+			$('<a href="' + _currProject.fileUrl(file) + '">' + icon + file.name + '</a>')
 				.data('file', file)
 				.appendTo($list);
 		}

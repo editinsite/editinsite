@@ -1,9 +1,24 @@
+
 body {
   font-size: 14px;
   font-family: -apple-system,BlinkMacSystemFont,Segoe WPC,Segoe UI,HelveticaNeue-Light,Ubuntu,Droid Sans,sans-serif;
   background: #1e1e1e;
   color: #d4d4d4;
 }
+
+@font-face {
+  font-family: 'Font Awesome 5 Regular';
+  font-style: normal;
+  font-weight: 400;
+  src: url("font-awesome/fontawesome-pro-regular-400.woff2") format("woff2"),
+       url("font-awesome/fontawesome-pro-regular-400.woff") format("woff"),
+       url("font-awesome/fontawesome-pro-regular-400.ttf") format("truetype")
+}
+.fa {
+  font-family: 'Font Awesome 5 Regular';
+  font-weight: 400
+}
+
 #files {
   position: absolute;
   left: 0;
@@ -21,6 +36,10 @@ body {
 }
 #files a.selected {
   background: #383838;
+}
+#files .fa {
+  margin-right: 3px;
+  opacity: 0.5;
 }
 
 #edit-panel {
@@ -78,6 +97,13 @@ input[type=submit] {
   -o-animation: progress-bar-stripes 1s linear infinite;
   animation: progress-bar-stripes 1s linear infinite
 }
+#editor .alert {
+  margin: 18% auto 0;
+  width: 30%;
+  text-align: center;
+  font-size: 2em;
+}
+
 @-webkit-keyframes progress-bar-stripes {
   from { background-position: 40px 0 }
   to { background-position: 0 0 }
@@ -97,10 +123,4 @@ input[type=submit] {
 @keyframes progress-bar-stripes {
   from { background-position: 40px 0 }
   to { background-position: 0 0 }
-}
-#editor .alert {
-  margin: 18% auto 0;
-  width: 30%;
-  text-align: center;
-  font-size: 2em;
 }
