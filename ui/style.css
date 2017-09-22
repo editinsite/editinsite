@@ -14,13 +14,30 @@ body {
        url("font-awesome/fontawesome-pro-regular-400.woff") format("woff"),
        url("font-awesome/fontawesome-pro-regular-400.ttf") format("truetype")
 }
-.fa {
+@font-face {
+  font-family: 'Font Awesome 5 Solid';
+  font-style: normal;
+  font-weight: 900;
+  src: url("font-awesome/fontawesome-pro-solid-900.eot");
+  src: url("font-awesome/fontawesome-pro-solid-900.woff2") format("woff2"),
+       url("font-awesome/fontawesome-pro-solid-900.woff") format("woff"),
+       url("font-awesome/fontawesome-pro-solid-900.ttf") format("truetype")
+}
+.fa, .fas {
+  font-family: 'Font Awesome 5 Solid';
+  font-weight: 900;
+}
+.far {
   font-family: 'Font Awesome 5 Regular';
-  font-weight: 400
+  font-weight: 400;
 }
 
 a {
   color: #007fff;
+}
+
+header a .fa-caret-down {
+  margin-left: 8px;
 }
 
 #files {
@@ -45,11 +62,11 @@ a {
 #files .filelink.selected {
   background: #383838;
 }
-#files .filelink.expanded .fa:before {
+#files .filelink.expanded i:before {
   content: '\f107' /* angle-down */;
   margin-left: -0.2em;
 }
-#files .fa {
+#files i {
   width: 0.7em;
   opacity: 0.5;
 }
