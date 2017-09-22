@@ -47,11 +47,16 @@ function fileNameClick (e) {
 	var $fileLink = $(this),
 		file = $fileLink.data('file');
 	if (file.isDir) {
-		var $fileLI = $fileLink.parent();
+		var $fileLI = $fileLink.parent(),
+			$fileList = $fileLI.children('.filelist');
 		if ($fileLink.hasClass('expanded'))
-			$fileLI.children('.filelist').remove();
-		else
-			getFileList($fileLI, file);
+			$fileList.hide();
+		else {
+			if ($fileList.length)
+				$fileList.show();
+			else
+				getFileList($fileLI, file);
+		}
 		$fileLink.toggleClass('expanded');
 	}
 	else {
@@ -92,7 +97,7 @@ function onResize () {
 }
 
 function showInEditor (file) {
-	if (!file) {
+	if (!file || file.bodyType !== 'text') {
 		if (_editor) {
 			if (_editor.getModel()) {
 				_editor.getModel().dispose();
@@ -100,8 +105,8 @@ function showInEditor (file) {
 			_editor.dispose();
 			_editor = null;
 		}
-		$('#editor').empty();
-		$('#editor').append('<p class="alert">File could not be loaded.</p>');
+		var body = renderBlob(file && file.body);
+		$('#editor').empty().append(body);
 		return;
 	}
 
@@ -114,11 +119,27 @@ function showInEditor (file) {
 	}
 
 	var oldModel = _editor.getModel();
-	var newModel = monaco.editor.createModel(file.body, file.type.id);
+	var newModel = monaco.editor.createModel(file.body, file.lang.id);
 	_editor.setModel(newModel);
 	if (oldModel) {
 		oldModel.dispose();
 	}
+}
+
+function renderBlob (blob) {
+	var link = '';
+	if (blob) {
+		var url = URL.createObjectURL(blob),
+			type = blob.type,
+			typeEnd = type.indexOf('/');
+		if (typeEnd !== -1)
+			type = type.slice(0, typeEnd);
+		if (type === 'image') {
+			return '<img src="' + url + '">';
+		}
+		link = '<a href="' + url + '" target="_blank">Open externally</a>';
+	}
+	return '<p class="alert">File could not be loaded.' + link + '</p>';
 }
 
 function showLoading (className) {

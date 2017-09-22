@@ -19,6 +19,10 @@ body {
   font-weight: 400
 }
 
+a {
+  color: #007fff;
+}
+
 #files {
   position: absolute;
   left: 0;
@@ -110,6 +114,11 @@ input[type=submit] {
   width: 30%;
   text-align: center;
   font-size: 2em;
+}
+#editor .alert a {
+  display: block;
+  font-size: 0.8em;
+  margin: 5px 0;
 }
 
 @-webkit-keyframes progress-bar-stripes {
