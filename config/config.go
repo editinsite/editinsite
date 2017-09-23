@@ -4,6 +4,7 @@ package config
 import (
 	"encoding/json"
 	"os"
+	"time"
 )
 
 const File = "editinsite.json"
@@ -21,17 +22,33 @@ var Values = struct {
 
 // Load the settings JSON if possible, or fall back to defaults.
 func Load() error {
-	file, err := os.Open(File)
-	if err != nil {
-		if os.IsNotExist(err) {
-			err = nil
+	var file *os.File
+
+	// If the server is daemonized, it is possible that its config is a
+	// symlink to a shared folder that has not mounted yet (Vagrant!),
+	// so give it some time.
+	for attempts := 0; ; attempts++ {
+		var err error
+		file, err = os.Open(File)
+		if err != nil {
+			if os.IsNotExist(err) {
+				err = nil
+				if attempts < 15 {
+					if _, err2 := os.Lstat(File); err2 == nil {
+						time.Sleep(1 * time.Second)
+						continue
+					}
+				}
+			}
+			return err
 		}
-		return err
+		break
 	}
 	defer file.Close()
 	return json.NewDecoder(file).Decode(&Values)
 }
 
+// Save the settings JSON to config.File.
 func Save() error {
 	file, err := os.Create(File)
 	if err != nil {
