@@ -30,7 +30,7 @@ function getFileList ($listParent, subDir) {
 			var file = fileList[i],
 				icon = '';
 			if (file.isDir)
-				icon = '<i class="fa fa-angle-right"></i>';
+				icon = '<i class="far fa-angle-right"></i>';
 			$('<li></li>').append(
 				$('<a class="filelink" href="' + _currProject.fileUrl(file)
 					+ '">' + icon + file.name + '</a>')
