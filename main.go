@@ -15,7 +15,8 @@ import (
 
 func main() {
 	if err := config.Load(); err != nil {
-		log.Printf("The %s file could not be loaded, defaults will be used: %v", config.File, err)
+		log.Printf("The %s file could not be loaded, defaults will be used: %v",
+			config.Values.File, err)
 	}
 	projects.LoadAll(config.Values.Projects)
 	fmt.Printf("Starting server on port %d...\n", config.Values.Port)
