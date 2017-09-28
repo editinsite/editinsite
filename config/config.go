@@ -1,4 +1,6 @@
-// Package config provides global configuration loading and saving.
+// Package config provides access to global configuration, along with
+// loading and saving. Configuration can come from a file, the
+// environment, or the command line (in that order).
 // The env parsing code is based on https://github.com/caarlos0/env
 // MIT License / Copyright (c) 2015-2016 Carlos Alexandro Becker
 package config
@@ -12,17 +14,17 @@ import (
 	"time"
 )
 
-// File is the relative path to the server configuration file.
-const File = "editinsite.json"
-
 // TODO: Add cli flags support as well (-p and -d)
 
 type settings struct {
+	// File is the relative path to the server configuration file (or blank).
+	File string `json:"-" env:"CONFIG_FILE" default:"editinsite.json"`
+
 	// Port number for the server to run on.
 	Port int `json:"port" env:"PORT" default:"8080"`
 
 	// Projects is a list of development workspaces.
-	Projects []string `json:"projectDirs" env:"DIRS"`
+	Projects []string `json:"projects" env:"PROJECT_DIRS" separator:":"`
 }
 
 // FileValues are settings persisted to/from .File, which may differ
@@ -54,32 +56,42 @@ func Apply() error {
 // Load the settings JSON into .FileValues if possible, overriding
 // any current values.
 func Load() error {
-	var file *os.File
 
-	// If the server is daemonized, it is possible that its config is a
-	// symlink to a shared folder that has not mounted yet (Vagrant!),
-	// so give it some time.
-	for attempts := 0; ; attempts++ {
-		var err error
-		file, err = os.Open(File)
-		if err != nil {
-			if os.IsNotExist(err) {
-				err = nil
-				if attempts < 15 {
-					if _, err2 := os.Lstat(File); err2 == nil {
-						time.Sleep(1 * time.Second)
-						continue
-					}
-				}
-			}
-			return err
+	// Don't need a config file if it's all through the ENV/CLI.
+	if len(Values.File) == 0 {
+		return nil
+	}
+
+	var file *os.File
+	var err error
+
+	// Try multiple times to load the file. This will be useful when we
+	// are reloading in response to file changes, because it could have
+	// a short-term write lock.
+	for attempts := 0; attempts < 15; attempts++ {
+		file, err = os.Open(Values.File)
+		if err == nil {
+			break
 		}
-		break
+		if os.IsNotExist(err) {
+			err = nil
+			// File not found -- check if it is thru a symlink.
+			// If the server is daemonized, the config may be a symlink to a
+			// shared folder that has not mounted yet (Vagrant!), so give it
+			// some time.
+			if _, err2 := os.Lstat(Values.File); err2 != nil {
+				break
+			}
+		}
+		time.Sleep(1 * time.Second)
+	}
+	if err != nil {
+		return err
 	}
 	defer file.Close()
 
 	Reset()
-	err := json.NewDecoder(file).Decode(&FileValues)
+	err = json.NewDecoder(file).Decode(&FileValues)
 	if err == nil {
 		err = Apply()
 	}
@@ -88,7 +100,10 @@ func Load() error {
 
 // Save the .FileValues settings as JSON to config.File.
 func Save() error {
-	file, err := os.Create(File)
+	if len(Values.File) == 0 {
+		return nil
+	}
+	file, err := os.Create(Values.File)
 	if err != nil {
 		return err
 	}
