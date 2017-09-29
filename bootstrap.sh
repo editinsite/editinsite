@@ -28,12 +28,20 @@ chown ubuntu:ubuntu /home/ubuntu/src/github.com/editinsite
 echo "Compiling EditInsite server..."
 su ubuntu -c "source ~/.profile && go install github.com/editinsite/editinsite"
 
+# check for either directory or symlink to "ui" directory
+if ! [ -d /home/ubuntu/bin/ui ]; then
+    ln -s /home/ubuntu/src/github.com/editinsite/editinsite/ui /home/ubuntu/bin/ui
+fi
+if ! [ -d /home/ubuntu/bin/editinsite.json ]; then
+    ln -s /home/ubuntu/src/github.com/editinsite/editinsite/editinsite.json /home/ubuntu/bin/editinsite.json
+fi
+
 # now daemonize the server
 echo "Starting server..."
 DAEMON=/lib/systemd/system/editinsite.service
 printf "[Unit]\nDescription=EditInsite server\n\n" >> $DAEMON
 printf "[Service]\nType=simple\nUser=ubuntu\nGroup=ubuntu\n" >> $DAEMON
-printf "WorkingDirectory=/home/ubuntu/src/github.com/editinsite/editinsite\n" >> $DAEMON
+printf "WorkingDirectory=/home/ubuntu/bin\n" >> $DAEMON
 printf "ExecStart=/home/ubuntu/bin/editinsite\n\n" >> $DAEMON
 printf "[Install]\nWantedBy=multi-user.target" >> $DAEMON
 systemctl enable editinsite

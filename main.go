@@ -20,5 +20,5 @@ func main() {
 	}
 	projects.LoadAll(config.Values.Projects)
 	fmt.Printf("Starting server on port %d...\n", config.Values.Port)
-	log.Fatal(httpserver.Start())
+	log.Fatalln(httpserver.Start())
 }

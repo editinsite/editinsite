@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"time"
@@ -50,12 +51,23 @@ func Reset() {
 // to the current applied Values.
 func Apply() error {
 	Values = FileValues
-	return parseFieldValues(&Values, getEnv)
+	err := parseFieldValues(&Values, getEnv)
+	if err != nil {
+		return err
+	}
+	path, err := filepath.Abs(Values.File)
+	if err != nil {
+		return err
+	}
+	Values.File = path
+	return nil
 }
 
 // Load the settings JSON into .FileValues if possible, overriding
 // any current values.
 func Load() error {
+
+	Reset()
 
 	// Don't need a config file if it's all through the ENV/CLI.
 	if len(Values.File) == 0 {
@@ -74,13 +86,12 @@ func Load() error {
 			break
 		}
 		if os.IsNotExist(err) {
-			err = nil
 			// File not found -- check if it is thru a symlink.
 			// If the server is daemonized, the config may be a symlink to a
 			// shared folder that has not mounted yet (Vagrant!), so give it
 			// some time.
 			if _, err2 := os.Lstat(Values.File); err2 != nil {
-				break
+				return nil
 			}
 		}
 		time.Sleep(1 * time.Second)
@@ -90,7 +101,6 @@ func Load() error {
 	}
 	defer file.Close()
 
-	Reset()
 	err = json.NewDecoder(file).Decode(&FileValues)
 	if err == nil {
 		err = Apply()
