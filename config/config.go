@@ -1,8 +1,11 @@
-// Package config provides access to global configuration, along with
-// loading and saving. Configuration can come from a file, the
-// environment, or the command line (in that order).
-// The env parsing code is based on https://github.com/caarlos0/env
-// MIT License / Copyright (c) 2015-2016 Carlos Alexandro Becker
+/*
+	Package config provides access to global configuration, along with
+	loading and saving. Configuration can come from a file, the environment,
+	or the command line (in that order).
+
+	The env parsing code is based on https://github.com/caarlos0/env
+	MIT License / Copyright (c) 2015-2016 Carlos Alexandro Becker
+*/
 package config
 
 import (
@@ -11,21 +14,21 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
-	"strings"
 	"time"
 )
 
-// TODO: Add cli flags support as well (-p and -d)
+// Version of EditInsite server
+const Version string = "0.1"
 
 type settings struct {
 	// File is the relative path to the server configuration file (or blank).
-	File string `json:"-" env:"CONFIG_FILE" default:"editinsite.json"`
+	File string `json:"-" env:"CONFIG_FILE" cli:"config" default:"editinsite.json" help:"Optional JSON server config"`
 
 	// Port number for the server to run on.
-	Port int `json:"port" env:"PORT" default:"8080"`
+	Port int `json:"port" env:"PORT" cli:"port,p" default:"8080" help:"Port to access site on"`
 
 	// Projects is a list of development workspaces.
-	Projects []string `json:"projects" env:"PROJECT_DIRS" separator:":"`
+	Projects []string `json:"projects" env:"PROJECT_DIRS" cli:"dirs,d" separator:":" help:"List of projects separated by \":\""`
 }
 
 // FileValues are settings persisted to/from .File, which may differ
@@ -36,8 +39,20 @@ var FileValues settings
 // includes .FileValues plus any environment and cli variables.
 var Values settings
 
+// ErrHelp is the error returned by ParseFlags when the -help or -h flag is used.
+var ErrHelp = errors.New("output help")
+
+// ErrNoFile is the error returned by LoadFromFile/SaveToFile when no
+// file is specified.
+var ErrNoFile = errors.New("no file specified")
+
 func init() {
 	Reset()
+}
+
+// ParseFlags reads CLI arguments for config.Values to work with.
+func ParseFlags() error {
+	return parseFlags(reflect.TypeOf(Values))
 }
 
 // Reset all Values and FileValues properties to their defaults.
@@ -55,6 +70,10 @@ func Apply() error {
 	if err != nil {
 		return err
 	}
+	err = parseFieldValues(&Values, getFlag)
+	if err != nil {
+		return err
+	}
 	path, err := filepath.Abs(Values.File)
 	if err != nil {
 		return err
@@ -63,15 +82,15 @@ func Apply() error {
 	return nil
 }
 
-// Load the settings JSON into .FileValues if possible, overriding
+// LoadFromFile brings the settings JSON into .FileValues if possible, overriding
 // any current values.
-func Load() error {
+func LoadFromFile(path string) error {
 
 	Reset()
 
 	// Don't need a config file if it's all through the ENV/CLI.
-	if len(Values.File) == 0 {
-		return nil
+	if len(path) == 0 {
+		return ErrNoFile
 	}
 
 	var file *os.File
@@ -81,7 +100,7 @@ func Load() error {
 	// are reloading in response to file changes, because it could have
 	// a short-term write lock.
 	for attempts := 0; attempts < 15; attempts++ {
-		file, err = os.Open(Values.File)
+		file, err = os.Open(path)
 		if err == nil {
 			break
 		}
@@ -90,8 +109,8 @@ func Load() error {
 			// If the server is daemonized, the config may be a symlink to a
 			// shared folder that has not mounted yet (Vagrant!), so give it
 			// some time.
-			if _, err2 := os.Lstat(Values.File); err2 != nil {
-				return nil
+			if _, err2 := os.Lstat(path); err2 != nil {
+				break
 			}
 		}
 		time.Sleep(1 * time.Second)
@@ -108,12 +127,12 @@ func Load() error {
 	return err
 }
 
-// Save the .FileValues settings as JSON to config.File.
-func Save() error {
-	if len(Values.File) == 0 {
-		return nil
+// SaveToFile writes the .FileValues settings as JSON to config.File.
+func SaveToFile(path string) error {
+	if len(path) == 0 {
+		return ErrNoFile
 	}
-	file, err := os.Create(Values.File)
+	file, err := os.Create(path)
 	if err != nil {
 		return err
 	}
@@ -121,42 +140,6 @@ func Save() error {
 	enc := json.NewEncoder(file)
 	enc.SetIndent("", "  ")
 	return enc.Encode(FileValues)
-}
-
-// errNotAStructPtr is returned if you pass something that is not a pointer to a
-// Struct
-var errNotAStructPtr = errors.New("Expected a pointer to a Struct")
-
-type valueToGet func(reflect.StructField) (string, bool)
-
-// parseFieldValues takes a struct containing `env` or `default` tags and loads
-// its values from environment variables or tag values.
-func parseFieldValues(v interface{}, getFn valueToGet) error {
-	ptrRef := reflect.ValueOf(v)
-	if ptrRef.Kind() != reflect.Ptr {
-		return errNotAStructPtr
-	}
-	ref := ptrRef.Elem()
-	if ref.Kind() != reflect.Struct {
-		return errNotAStructPtr
-	}
-
-	refType := ref.Type()
-	var errorList []string
-
-	for i := 0; i < refType.NumField(); i++ {
-		value, ok := getFn(refType.Field(i))
-		if ok {
-			if err := setFieldValue(ref.Field(i), refType.Field(i), value); err != nil {
-				errorList = append(errorList, err.Error())
-				continue
-			}
-		}
-	}
-	if len(errorList) == 0 {
-		return nil
-	}
-	return errors.New(strings.Join(errorList, ". "))
 }
 
 func getDefault(field reflect.StructField) (string, bool) {
@@ -169,4 +152,9 @@ func getEnv(field reflect.StructField) (string, bool) {
 		return os.LookupEnv(key)
 	}
 	return "", false
+}
+
+func getFlag(field reflect.StructField) (string, bool) {
+	v, ok := flagValues[field.Name]
+	return v, ok
 }

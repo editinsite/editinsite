@@ -14,11 +14,20 @@ import (
 )
 
 func main() {
-	if err := config.Load(); err != nil {
-		log.Printf("The %s file could not be loaded, defaults will be used: %v",
-			config.Values.File, err)
+	if err := config.ParseFlags(); err != nil {
+		return
+	}
+	if err := config.Apply(); err != nil {
+		fmt.Printf("%v\n", err)
+		return
+	}
+	if err := config.LoadFromFile(config.Values.File); err == nil {
+		fmt.Printf("Loaded configuration from %s\n", config.Values.File)
+	} else if err != config.ErrNoFile {
+		fmt.Printf("Config file could not be loaded, defaults will be used: %v\n", err)
 	}
 	projects.LoadAll(config.Values.Projects)
-	fmt.Printf("Starting server on port %d...\n", config.Values.Port)
+	fmt.Printf("Starting EditInsite v%s server on port %d...\n",
+		config.Version, config.Values.Port)
 	log.Fatalln(httpserver.Start())
 }

@@ -3,6 +3,8 @@ package config
 // Adapted from https://github.com/caarlos0/env
 // MIT License / Copyright (c) 2015-2016 Carlos Alexandro Becker
 
+// TODO: Show user-friendly errors when value type does not match the field.
+
 import (
 	"errors"
 	"reflect"
@@ -12,10 +14,12 @@ import (
 )
 
 var (
-	// ErrUnsupportedType if the struct field type is not supported
-	ErrUnsupportedType = errors.New("Type is not supported")
-	// ErrUnsupportedSliceType if the slice element type is not supported
-	ErrUnsupportedSliceType = errors.New("Unsupported slice type")
+	// errNotAStructPtr if you don't pass a pointer to a Struct
+	errNotAStructPtr = errors.New("Expected a pointer to a Struct")
+	// errUnsupportedType if the struct field type is not supported
+	errUnsupportedType = errors.New("Type is not supported")
+	// errUnsupportedSliceType if the slice element type is not supported
+	errUnsupportedSliceType = errors.New("Unsupported slice type")
 
 	// Friendly names for reflect types
 	sliceOfInts     = reflect.TypeOf([]int(nil))
@@ -25,6 +29,38 @@ var (
 	sliceOfFloat32s = reflect.TypeOf([]float32(nil))
 	sliceOfFloat64s = reflect.TypeOf([]float64(nil))
 )
+
+type valueToGet func(reflect.StructField) (string, bool)
+
+// parseFieldValues takes a struct containing `env` or `default` tags and loads
+// its values from environment variables or tag values.
+func parseFieldValues(v interface{}, getFn valueToGet) error {
+	ptrRef := reflect.ValueOf(v)
+	if ptrRef.Kind() != reflect.Ptr {
+		return errNotAStructPtr
+	}
+	ref := ptrRef.Elem()
+	if ref.Kind() != reflect.Struct {
+		return errNotAStructPtr
+	}
+
+	refType := ref.Type()
+	var errorList []string
+
+	for i := 0; i < refType.NumField(); i++ {
+		value, ok := getFn(refType.Field(i))
+		if ok {
+			if err := setFieldValue(ref.Field(i), refType.Field(i), value); err != nil {
+				errorList = append(errorList, err.Error())
+				continue
+			}
+		}
+	}
+	if len(errorList) == 0 {
+		return nil
+	}
+	return errors.New(strings.Join(errorList, ". "))
+}
 
 func setFieldValue(field reflect.Value, refType reflect.StructField, value string) error {
 	switch field.Kind() {
@@ -78,7 +114,7 @@ func setFieldValue(field reflect.Value, refType reflect.StructField, value strin
 			field.SetInt(intValue)
 		}
 	default:
-		return ErrUnsupportedType
+		return errUnsupportedType
 	}
 	return nil
 }
@@ -125,7 +161,7 @@ func handleSlice(field reflect.Value, value, separator string) error {
 		}
 		field.Set(reflect.ValueOf(boolData))
 	default:
-		return ErrUnsupportedSliceType
+		return errUnsupportedSliceType
 	}
 	return nil
 }
