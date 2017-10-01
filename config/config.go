@@ -2,6 +2,9 @@
 	Package config provides access to global configuration, along with
 	loading and saving. Configuration can come from a file, the environment,
 	or the command line (in that order).
+	Examples:
+		* ./editinsite -port 8080 -dirs=a/myproject1:b/myproject2
+		* ./editinsite --port=8080 a/myproject1:b/myprojects2
 
 	The env parsing code is based on https://github.com/caarlos0/env
 	MIT License / Copyright (c) 2015-2016 Carlos Alexandro Becker
@@ -52,7 +55,13 @@ func init() {
 
 // ParseFlags reads CLI arguments for config.Values to work with.
 func ParseFlags() error {
-	return parseFlags(reflect.TypeOf(Values))
+	if err := parseFlags(reflect.TypeOf(Values)); err != nil {
+		return err
+	}
+	if len(remainingArgs) == 1 {
+		flagValues["Projects"] = remainingArgs[0]
+	}
+	return nil
 }
 
 // Reset all Values and FileValues properties to their defaults.

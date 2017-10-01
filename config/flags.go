@@ -12,18 +12,19 @@ import (
 )
 
 var (
-	flagFields []*reflect.StructField
-	flagNames  map[string]*reflect.StructField
-	flagValues map[string]string
+	flagFields    []*reflect.StructField
+	flagNames     map[string]*reflect.StructField
+	flagValues    map[string]string
+	remainingArgs []string
 )
 
 func parseFlags(fieldStruct reflect.Type) error {
 
 	setFlagFields(fieldStruct)
 
-	arguments := os.Args[1:]
+	remainingArgs = os.Args[1:]
 	for {
-		seen, err := parseNext(&arguments)
+		seen, err := parseNext(&remainingArgs)
 		if seen {
 			continue
 		}

@@ -51,7 +51,7 @@ func parseFieldValues(v interface{}, getFn valueToGet) error {
 		value, ok := getFn(refType.Field(i))
 		if ok {
 			if err := setFieldValue(ref.Field(i), refType.Field(i), value); err != nil {
-				errorList = append(errorList, err.Error())
+				errorList = append(errorList, "cannot set "+refType.Field(i).Name+": "+err.Error())
 				continue
 			}
 		}
