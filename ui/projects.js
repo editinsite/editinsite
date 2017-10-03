@@ -21,7 +21,7 @@ var projects;
 
 	Project.prototype = {
 	    getFileList: function (subDir, callback) {
-			$.getJSON(this.fileUrl(subDir), function (files) {
+			$.getJSON(this.rawUrl(subDir), function (files) {
 				var fileList = fileListFromNames(files, subDir);
 				callback(fileList);
 			});
@@ -29,7 +29,15 @@ var projects;
 
 		fileUrl: function (file) {
 			return file ? (this.fileUrl(file.parent) + file.name)
-				: ('/projects/' + this.id + '/');
+				: (this.id + '/');
+		},
+
+		rawUrl: function (file) {
+			return '/projects/' + this.fileUrl(file);
+		},
+
+		editUrl: function (file) {
+			return '/edit/' + this.fileUrl(file);
 		}
 	};
 

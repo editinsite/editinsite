@@ -15,7 +15,7 @@ var ProjectFile;
 	ProjectFile.prototype = {
 		download: function (callback) {
 			var file = this,
-				url = projects.current.fileUrl(file),
+				url = projects.current.rawUrl(file),
 				oReq = new XMLHttpRequest();
 
 			oReq.onload = function () {
@@ -49,7 +49,7 @@ var ProjectFile;
 		},
  
 		upload: function (callback) {
-			var url = projects.current.fileUrl(this),
+			var url = projects.current.rawUrl(this),
 				oReq = new XMLHttpRequest();
 			oReq.onload = callback;
 			oReq.open('POST', url);

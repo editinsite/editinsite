@@ -15,12 +15,20 @@ $(function () {
 filesView = {
 
 	load: function () {
-		getFileList($('#files'));
-	}
+		expandDir('');
+	},
+
+	open: selectPath
 };
 
-function getFileList ($listParent, subDir) {
-	projects.current.getFileList(subDir, function (fileList) {
+function showFileList ($parent, dir, callback) {
+	var $list = $parent.children('.filelist')
+	if ($list.length) {
+		$list.show();
+		callback && callback($list);
+		return;
+	}
+	projects.current.getFileList(dir, function (fileList) {
 		var $list = $('<ul class="filelist"></ul>');
 		for (var i = 0; i < fileList.length; i++) {
 			var file = fileList[i],
@@ -28,23 +36,15 @@ function getFileList ($listParent, subDir) {
 			if (file.isDir)
 				icon = '<i class="far fa-angle-right"></i>';
 			$('<li></li>').append(
-				$('<a class="filelink" href="' + projects.current.fileUrl(file)
+				$('<a class="filelink" href="'
+					+ projects.current.editUrl(file)
 					+ '">' + icon + file.name + '</a>')
 					.data('file', file)
 			).appendTo($list);
 		}
-		$list.appendTo($listParent);
+		$list.appendTo($parent);
+		callback && callback($list);
 	});
-}
-
-function projectSelectClick (e) {
-	e.preventDefault();
-
-	var $list = $('#project-select-list ul').empty();
-	for (var i = 0; i < _projects.length; i++) {
-		var p = _projects[i];
-		$list.append('<li><a href="/"' + p.id + '>' + p.name + '</li>');
-	}
 }
 
 function fileNameClick (e) {
@@ -53,24 +53,88 @@ function fileNameClick (e) {
 	var $fileLink = $(this),
 		file = $fileLink.data('file');
 	if (file.isDir) {
-		var $fileLI = $fileLink.parent(),
-			$fileList = $fileLI.children('.filelist');
-		if ($fileLink.hasClass('expanded'))
-			$fileList.hide();
-		else {
-			if ($fileList.length)
-				$fileList.show();
-			else
-				getFileList($fileLI, file);
-		}
-		$fileLink.toggleClass('expanded');
+		toggleDirList($fileLink);
 	}
 	else {
-		if (!$fileLink.hasClass('selected')) {
-			$('#files .selected').removeClass('selected');
-			$fileLink.addClass('selected');
-			openFile(file);
+		selectFile($fileLink);
+		router.addHistory($fileLink.attr('href'));
+	}
+}
+
+function toggleDirList ($dirLink) {
+	if ($dirLink.hasClass('expanded')) {
+		$dirLink.siblings('.filelist').hide();
+	}
+	else {
+		showFileList($dirLink.parent(), $dirLink.data('file'));
+	}
+	$dirLink.toggleClass('expanded');
+}
+
+function expandDir (path, callback) {
+
+	function expand ($parent, path, callback) {
+		var dirEnd = path.indexOf('/'),
+			dirName = path.slice(0, dirEnd+1);
+		path = path.slice(dirEnd+1);
+		var $dirLink, $newParent;
+		if ($parent) {
+			$dirLink = findFileLink($parent, dirName);
+			if (!$dirLink) {
+				callback && callback();
+				return;
+			}
+			$newParent = $dirLink.parent();
 		}
+		else {
+			$newParent = $('#files');
+		}
+		showFileList($newParent, $dirLink && $dirLink.data('file'), function ($list) {
+			if ($list) {
+				if (path.length !== 0)
+					expand($list, path, callback);
+				else
+					callback && callback($list);
+			}
+			else callback && callback();
+		});
+	}
+
+	if (path[path.length-1] !== '/')
+		path += '/';
+	expand (null, path, callback);
+}
+
+function selectPath (filePath) {
+	var dirEnd = filePath.lastIndexOf('/');
+	var dir = filePath.slice(0, dirEnd+1),
+		fileName = filePath.slice(dirEnd+1);
+	expandDir(dir, function ($list) {
+		if ($list) {
+			var $fileLink = findFileLink($list, fileName);
+			if ($fileLink) {
+				selectFile($fileLink);
+				return;
+			}
+		}
+		alert('File not found.');
+	});
+}
+
+function selectFile ($fileLink) {
+	if (!$fileLink.hasClass('selected')) {
+		$('#files .selected').removeClass('selected');
+		$fileLink.addClass('selected');
+		openFile($fileLink.data('file'));
+	}
+}
+
+function findFileLink ($list, fileName) {
+	var $items = $list.children();
+	for (var i = 0, il = $items.length; i < il; i++) {
+		var $link = $items.eq(i).children('.filelink');
+		if ($link.data('file').name === fileName)
+			return $link;
 	}
 }
 
