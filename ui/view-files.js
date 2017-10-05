@@ -29,6 +29,10 @@ function showFileList ($parent, dir, callback) {
 		return;
 	}
 	projects.current.getFileList(dir, function (fileList) {
+		if (!fileList) {
+			callback(null);
+			return;
+		}
 		var $list = $('<ul class="filelist"></ul>');
 		for (var i = 0; i < fileList.length; i++) {
 			var file = fileList[i],

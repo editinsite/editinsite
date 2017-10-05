@@ -6,10 +6,18 @@ var projects;
 
 	projects = {
 		getList: function (callback) {
-			$.getJSON('/projects/', function (projects) {
+			$.ajax({
+				method: 'POST',
+				url: '/projects/',
+				dataType: 'json'
+			})
+			.done (function (projects) {
 				for (var i = projects.length; i--;)
 					projects[i] = new Project(projects[i]);
 				callback(projects);
+			})
+			.fail (function () {
+				callback(null);
 			});
 		},
 		current: null
@@ -21,9 +29,17 @@ var projects;
 
 	Project.prototype = {
 	    getFileList: function (subDir, callback) {
-			$.getJSON(this.rawUrl(subDir), function (files) {
+			$.ajax({
+				method: 'POST',
+				url: this.rawUrl(subDir),
+				dataType: 'json'
+			})
+			.done (function (files) {
 				var fileList = fileListFromNames(files, subDir);
 				callback(fileList);
+			})
+			.fail (function () {
+				callback(null);
 			});
 		},
 

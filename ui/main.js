@@ -10,20 +10,17 @@ function onLoad () {
 
 function registerEvents () {
 	window.onpopstate = function (e) {
-		router.setState(e.state ? e.state.path : null);
+		router.setState(decodeURIComponent(window.location.pathname));
 	};
 }
 
 function getProjectList () {
 	projects.getList(function (projectList) {
-		projects.current = projectList[0];
-		filesView.load();
-
-		// See https://developer.mozilla.org/en-US/docs/Web/API/History_API#Reading_the_current_state
-		if (history.state)
-			router.setState(history.state.path);
-		else
-			router.setState(null);
+		if (projectList) {
+			projects.current = projectList[0];
+			filesView.load();
+			router.setState(decodeURIComponent(window.location.pathname));
+		}
 	});
 }
 
