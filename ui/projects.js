@@ -4,20 +4,29 @@ var projects;
 
 (function () {
 
+	var _list;
+
 	projects = {
 		getList: function (callback) {
-			$.ajax({
-				method: 'POST',
-				url: '/projects/',
-				dataType: 'json'
-			})
-			.done (function (projects) {
-				for (var i = projects.length; i--;)
-					projects[i] = new Project(projects[i]);
-				callback(projects);
-			})
-			.fail (function () {
-				callback(null);
+			if (_list) {
+				callback(_list);
+				return;
+			}
+			$.doOnce('/projects/', callback, function (callback) {
+				$.ajax({
+					method: 'POST',
+					url: '/projects/',
+					dataType: 'json'
+				})
+				.done (function (projects) {
+					for (var i = projects.length; i--;)
+						projects[i] = new Project(projects[i]);
+					_list = projects;
+					callback(projects);
+				})
+				.fail (function () {
+					callback(null);
+				});
 			});
 		},
 		current: null

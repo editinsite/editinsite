@@ -34,10 +34,32 @@ body {
 
 a {
   color: #007fff;
+  text-decoration: none;
 }
 
+header {
+  padding: 0 10px;
+}
 header a .fa-caret-down {
   margin-left: 8px;
+}
+
+#project-select-list {
+  display: none;
+  background: #1e1e1e;
+  position: absolute;
+  z-index: 2;
+}
+#project-select-list ul {
+  padding: 10px 0;
+  list-style: none;
+}
+#project-select-list a {
+  display: block;
+  padding: 5px;
+}
+#project-select-list a:hover {
+  background: #383838;
 }
 
 #files {

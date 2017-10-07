@@ -21,7 +21,7 @@
         });
     };
 
-    // Returns a function that can be used to call func() on a delay.
+    // debounce returns a function that can be used to call func() on a delay.
     // If `immediate` is true, func() is called on leading rather than trailing edge.
     function debounce (func, delayMs, immediate) {
         var timer;
@@ -40,5 +40,26 @@
             }
         };
     }
+
+    var _doOnceJobSet = {};
+
+    // doOnce will call the doFunction only one time for the given jobId.
+    // The doFunction receives a callback to execute all of the registered handlers.
+    $.doOnce = function (jobId, handlerFn, doFunction) {
+        var handlerList = _doOnceJobSet[jobId],
+            isFirst = !handlerList;
+        if (isFirst)
+            handlerList = _doOnceJobSet[jobId] = [];
+        if (handlerFn)
+            handlerList.push(handlerFn);
+
+        if (isFirst) {
+            doFunction(function () {
+                delete _doOnceJobSet[jobId];
+                for (var i = 0; i < handlerList.length; i++)
+                    handlerList[i].apply(null, arguments);
+            });
+        }
+    };
 
 })(jQuery);

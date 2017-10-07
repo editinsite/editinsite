@@ -14,40 +14,46 @@ $(function () {
 
 filesView = {
 
-	load: function () {
-		expandDir('');
-	},
-
 	open: selectPath
 };
 
+function projectChanged (project) {
+	$('#files').empty();
+	closeEditor();
+	expandDir('');
+}
+router.subscribe('project-change', projectChanged);
+
 function showFileList ($parent, dir, callback) {
-	var $list = $parent.children('.filelist')
+	var $list = $parent.children('.filelist');
 	if ($list.length) {
 		$list.show();
 		callback && callback($list);
 		return;
 	}
-	projects.current.getFileList(dir, function (fileList) {
-		if (!fileList) {
-			callback(null);
-			return;
-		}
-		var $list = $('<ul class="filelist"></ul>');
-		for (var i = 0; i < fileList.length; i++) {
-			var file = fileList[i],
-				icon = '';
-			if (file.isDir)
-				icon = '<i class="far fa-angle-right"></i>';
-			$('<li></li>').append(
-				$('<a class="filelink" href="'
-					+ projects.current.editUrl(file)
-					+ '">' + icon + file.name + '</a>')
-					.data('file', file)
-			).appendTo($list);
-		}
-		$list.appendTo($parent);
-		callback && callback($list);
+	var url = projects.current.rawUrl(dir);
+	$.doOnce(url, callback, function (callback) {
+		projects.current.getFileList(dir, function (fileList) {
+			if (!fileList) {
+				callback(null);
+				return;
+			}
+			var $list = $('<ul class="filelist"></ul>');
+			for (var i = 0; i < fileList.length; i++) {
+				var file = fileList[i],
+					icon = '';
+				if (file.isDir)
+					icon = '<i class="far fa-angle-right"></i>';
+				$('<li></li>').append(
+					$('<a class="filelink" href="'
+						+ projects.current.editUrl(file)
+						+ '">' + icon + file.name + '</a>')
+						.data('file', file)
+				).appendTo($list);
+			}
+			$list.appendTo($parent);
+			callback($list);
+		});
 	});
 }
 
@@ -95,6 +101,7 @@ function expandDir (path, callback) {
 		}
 		showFileList($newParent, $dirLink && $dirLink.data('file'), function ($list) {
 			if ($list) {
+				$list.siblings('.filelink').addClass('expanded');
 				if (path.length !== 0)
 					expand($list, path, callback);
 				else
@@ -115,6 +122,7 @@ function selectPath (filePath) {
 		fileName = filePath.slice(dirEnd+1);
 	expandDir(dir, function ($list) {
 		if ($list) {
+			if (!fileName) return;
 			var $fileLink = findFileLink($list, fileName);
 			if ($fileLink) {
 				selectFile($fileLink);
@@ -171,15 +179,9 @@ function onResize () {
 
 function showInEditor (file) {
 	if (!file || file.bodyType !== 'text') {
-		if (_editor) {
-			if (_editor.getModel()) {
-				_editor.getModel().dispose();
-			}
-			_editor.dispose();
-			_editor = null;
-		}
+		closeEditor();
 		var body = renderBlob(file && file.body);
-		$('#editor').empty().append(body);
+		$('#editor').append(body);
 		return;
 	}
 
@@ -197,6 +199,17 @@ function showInEditor (file) {
 	if (oldModel) {
 		oldModel.dispose();
 	}
+}
+
+function closeEditor () {
+	if (_editor) {
+		if (_editor.getModel()) {
+			_editor.getModel().dispose();
+		}
+		_editor.dispose();
+		_editor = null;
+	}
+	$('#editor').empty();
 }
 
 function renderBlob (blob) {
