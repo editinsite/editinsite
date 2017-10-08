@@ -119,7 +119,7 @@ File editor view
   top: 0;
   left: 0;
   right: 0;
-  line-height: 70px;
+  line-height: 60px;
 }
 #file-save-button {
   background: none;
@@ -142,7 +142,7 @@ File editor view
 }
 .editor-frame {
   position: absolute;
-  top: 70px;
+  top: 60px;
   bottom: 0;
   width: 100%;
 }

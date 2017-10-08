@@ -122,14 +122,18 @@ function selectPath (filePath) {
 		fileName = filePath.slice(dirEnd+1);
 	expandDir(dir, function ($list) {
 		if ($list) {
-			if (!fileName) return;
+			if (!fileName) {
+				closeFile();
+				return;
+			}
 			var $fileLink = findFileLink($list, fileName);
 			if ($fileLink) {
 				selectFile($fileLink);
 				return;
 			}
 		}
-		alert('File not found.');
+		closeFile();
+		showInEditor(null);
 	});
 }
 
