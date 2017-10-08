@@ -54,6 +54,11 @@ var ProjectFile;
 			oReq.onload = callback;
 			oReq.open('POST', url);
 			oReq.send(new TextEncoder().encode(this.body));
+		},
+
+		path: function () {
+			return this.parent ? (this.parent.path() + this.name)
+				: this.name;
 		}
 	};
 

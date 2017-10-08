@@ -8,13 +8,13 @@ var _editor, _currFile;
 
 $(function () {
 	$('#files').on('click', 'a', fileNameClick);
-	$('input[type=submit]').click(saveFile);
+	$('#file-save-button').click(saveFile);
 	$(window).resize(onResize);
 });
 
 filesView = {
-
-	open: selectPath
+	openFile: selectPath,
+	closeFile: closeFile
 };
 
 function projectChanged (project) {
@@ -156,17 +156,30 @@ function openFile (file) {
 	file.download(function (file) {
 		$('.loading.editor').loading(false);
 		showInEditor(file);
+		fileUpdated();
+		$('#file-bar .open-raw').attr('href', projects.current.rawUrl(file));
+		$('#file-bar .path').html(file.path());
+		$('#file-bar').show();
 	});
+}
+
+function closeFile () {
+	closeEditor();
+	$('#file-bar').hide();
+	_currFile = null;
 }
 
 function saveFile (e) {
 	e && e.preventDefault();
 
-	if (_editor) {
-		$('input[type=submit]').text('Saving...');
+	if (_editor && $('#file-save-button').hasClass('dirty')) {
+		var $btn = $('#file-save-button i'),
+			btnClasses = 'fa-spinner-third fa-spin';
+		$btn.removeClass('fa-save').addClass(btnClasses);
 		_currFile.body = _editor.getValue();
 		_currFile.upload(function () {
-			$('input[type=submit]').text('Save');
+			clearDirty();
+			$btn.removeClass(btnClasses).addClass('fa-save');
 		});
 	}
 }
@@ -191,6 +204,7 @@ function showInEditor (file) {
 			model: null,
 			theme: 'vs-dark'
 		});
+		_editor.onDidChangeModelContent(fileUpdated);
 	}
 
 	var oldModel = _editor.getModel();
@@ -199,6 +213,7 @@ function showInEditor (file) {
 	if (oldModel) {
 		oldModel.dispose();
 	}
+	file.version = newModel.getAlternativeVersionId();
 }
 
 function closeEditor () {
@@ -221,11 +236,28 @@ function renderBlob (blob) {
 		if (typeEnd !== -1)
 			type = type.slice(0, typeEnd);
 		if (type === 'image') {
-			return '<img src="' + url + '">';
+			return '<div class="image-file"><img src="' + url + '"></div>';
 		}
 		link = '<a href="' + url + '" target="_blank">Open externally</a>';
 	}
 	return '<p class="alert">File could not be loaded.' + link + '</p>';
+}
+
+function fileIsDirty () {
+	if (_editor)
+		return _editor.getModel().getAlternativeVersionId() !== _currFile.version;
+	return false;
+}
+
+function clearDirty () {
+	if (_editor) {
+		_currFile.version = _editor.getModel().getAlternativeVersionId();
+		fileUpdated();
+	}
+}
+
+function fileUpdated () {
+	$('#file-save-button').toggleClass('dirty', fileIsDirty());
 }
 
 })();

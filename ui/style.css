@@ -33,10 +33,13 @@ body {
 }
 
 a {
-  color: #007fff;
+  color: #76baff;
   text-decoration: none;
 }
 
+/**************************************
+App header
+*/
 header {
   padding: 0 10px;
 }
@@ -46,22 +49,32 @@ header a .fa-caret-down {
 
 #project-select-list {
   display: none;
-  background: #1e1e1e;
+  background: #2d2d2d;
   position: absolute;
   z-index: 2;
+  min-width: 200px;
+  box-shadow: 1px 1px 20px #000;
 }
 #project-select-list ul {
-  padding: 10px 0;
+  margin: 0;
+  padding: 0;
   list-style: none;
+}
+#project-select-list li:not(:last-child) {
+  border-bottom: 1px solid #1e1e1e;
 }
 #project-select-list a {
   display: block;
-  padding: 5px;
+  padding: 10px;
+  color: #fff;
 }
 #project-select-list a:hover {
   background: #383838;
 }
 
+/**************************************
+File editor view
+*/
 #files {
   position: absolute;
   left: 0;
@@ -100,23 +113,47 @@ header a .fa-caret-down {
   top: 30px;
   bottom: 30px;
 }
-.editor-frame {
+#file-bar {
+  display: none;
   position: absolute;
   top: 0;
-  bottom: 70px;
+  left: 0;
+  right: 0;
+  line-height: 70px;
+}
+#file-save-button {
+  background: none;
+  border: none;
+  outline: none;
+  font-size: 1.5em;
+  vertical-align: middle;
+  color: #777;
+}
+#file-save-button.dirty {
+  color: #007fff;
+  cursor: pointer;
+}
+#file-save-button i.fa-spin {
+  -webkit-animation: fa-spin 0.5s infinite linear;
+  animation:fa-spin 0.5s infinite linear;
+}
+#file-bar .open-raw {
+  float: right;
+}
+.editor-frame {
+  position: absolute;
+  top: 70px;
+  bottom: 0;
   width: 100%;
 }
-input[type=submit] {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  padding: 10px 100px;
-}
-
 #editor {
   position: absolute;
   width: 100%;
   height: 100%;
+}
+#editor .image-file {
+  padding: 10px;
+  text-align: center;
 }
 .editor-frame .loading {
   position: absolute;

@@ -68,7 +68,7 @@ function setState (project, action, subPath) {
 
 	function set () {
 		if (action === 'edit') {
-			filesView.open('/'+subPath);
+			filesView.openFile('/'+subPath);
 		}
 	}
 
