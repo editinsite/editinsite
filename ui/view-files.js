@@ -160,7 +160,6 @@ function openFile (file) {
 	file.download(function (file) {
 		$('.loading.editor').loading(false);
 		showInEditor(file);
-		fileUpdated();
 		$('#file-bar .open-raw').attr('href', projects.current.rawUrl(file));
 		$('#file-bar .path').html(file.path());
 		$('#file-bar').show();
@@ -212,19 +211,16 @@ function showInEditor (file) {
 	}
 
 	var oldModel = _editor.getModel();
-	var newModel = monaco.editor.createModel(file.body, file.lang.id);
+	var newModel = file.model || monaco.editor.createModel(file.body, file.lang.id);
+	file.model = newModel;
 	_editor.setModel(newModel);
-	if (oldModel) {
-		oldModel.dispose();
-	}
-	file.version = newModel.getAlternativeVersionId();
+	if (!file.savedVersion)
+		file.savedVersion = newModel.getAlternativeVersionId();
+	fileUpdated();
 }
 
 function closeEditor () {
 	if (_editor) {
-		if (_editor.getModel()) {
-			_editor.getModel().dispose();
-		}
 		_editor.dispose();
 		_editor = null;
 	}
@@ -248,20 +244,27 @@ function renderBlob (blob) {
 }
 
 function fileIsDirty () {
-	if (_editor)
-		return _editor.getModel().getAlternativeVersionId() !== _currFile.version;
+	if (_editor) {
+		var version = _editor.getModel().getAlternativeVersionId();
+		return version !== _currFile.savedVersion;
+	}
 	return false;
 }
 
 function clearDirty () {
 	if (_editor) {
-		_currFile.version = _editor.getModel().getAlternativeVersionId();
+		_currFile.savedVersion = _editor.getModel().getAlternativeVersionId();
 		fileUpdated();
 	}
 }
 
 function fileUpdated () {
-	$('#file-save-button').toggleClass('dirty', fileIsDirty());
+	var dirty = fileIsDirty();
+	var $link = $('#files .filelink[href="'
+		+ projects.current.editUrl(_currFile) + '"]');
+
+	$('#file-save-button').toggleClass('dirty', dirty);
+	$link.toggleClass('dirty', dirty);
 }
 
 })();

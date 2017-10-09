@@ -33,7 +33,7 @@ function getProjectList () {
 }
 
 function projectChange (newProject, oldProject) {
-	$('#project-select .current').text('Project: ' + newProject.name);
+	$('#project-select .current').text('Project: ' + newProject.id);
 }
 
 function projectSelectClick (e) {

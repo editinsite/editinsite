@@ -14,8 +14,13 @@ var ProjectFile;
 
 	ProjectFile.prototype = {
 		download: function (callback) {
-			var file = this,
-				url = projects.current.rawUrl(file),
+			var file = this;
+			if (file.body) {
+				callback(file);
+				return;
+			}
+
+			var url = projects.current.rawUrl(file),
 				oReq = new XMLHttpRequest();
 
 			oReq.onload = function () {
