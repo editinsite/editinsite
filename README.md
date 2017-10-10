@@ -18,7 +18,7 @@ EditInsite consists of a server that you download and run in your project's fold
 5. Access the development environment in your browser at [http://localhost:8080](http://localhost:8080).
 
 ### Current/upcoming features
-- [ ] Open and edit the files in your project directory, from a local or remote browser.
+- [x] Open and edit project text files in your browser.
 - [ ] View a preview of your site as you save changes.
 - [ ] Edit HTML visually.
 - [ ] Edit CSS visually.
