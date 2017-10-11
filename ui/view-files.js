@@ -47,7 +47,8 @@ function showFileList ($parent, dir, callback) {
 				$('<li></li>').append(
 					$('<a class="filelink" href="'
 						+ projects.current.editUrl(file)
-						+ '">' + icon + file.name + '</a>')
+						+ '" title="/' + file.path() + '">'
+						+ icon + file.name + '</a>')
 						.data('file', file)
 				).appendTo($list);
 			}

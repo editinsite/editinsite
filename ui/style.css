@@ -83,6 +83,8 @@ File editor view
   bottom: 30px;
   overflow: auto;
   padding-left: 5px;
+  box-sizing: border-box;
+  font-size: 0.9em;
 }
 #files ul {
   list-style: none;
@@ -95,6 +97,7 @@ File editor view
   padding: 5px;
   text-decoration: none;
   color: inherit;
+  white-space: nowrap;
 }
 #files .filelink.selected {
   background: #383838;
