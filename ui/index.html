@@ -15,21 +15,31 @@
 		<nav id="project-select-list">
 			<ul></ul>
 		</nav>
+		<nav id="switch-view">
+			<a href="#" data-view="files">Files</a><a href="#" data-view="preview">Preview</a>
+		</nav>
 	</header>
-	<nav id="files"></nav>
-	<div id="edit-panel">
-		<div id="file-bar">
-			<button id="file-save-button"><i class="far fa-save fa-fw"></i></button>
-			<span class="path"></span>
-			<a href="#" target="_blank" class="open-raw">Raw File <i class="fa fa-external-link"></i></a>
-		</div>
-		<div class="editor-frame">
-			<div class="loading editor" style="display: none;">
-				<div class="progress">
-					<div class="bar"></div>
+	<div id="views">
+		<div id="view-files">
+			<nav id="files"></nav>
+			<div id="edit-panel">
+				<div id="file-bar">
+					<button id="file-save-button"><i class="far fa-save fa-fw"></i></button>
+					<span class="path"></span>
+					<a href="#" target="_blank" class="open-raw">Raw File <i class="fa fa-external-link"></i></a>
+				</div>
+				<div class="editor-frame">
+					<div class="loading editor" style="display: none;">
+						<div class="progress">
+							<div class="bar"></div>
+						</div>
+					</div>
+					<div id="editor"></div>
 				</div>
 			</div>
-			<div id="editor"></div>
+		</div>
+		<div id="view-preview">
+			<iframe id="preview-frame"></iframe>
 		</div>
 	</div>
 	<script src="/jquery-3.2.1.min.js"></script>
@@ -39,7 +49,9 @@
 	<script src="/projects.js"></script>
 	<script src="/files.js"></script>
 	<script src="/router.js"></script>
+	<script src="/views.js"></script>
 	<script src="/view-files.js"></script>
+	<script src="/view-preview.js"></script>
 	<script src="/main.js"></script>
 </body>
 </html>

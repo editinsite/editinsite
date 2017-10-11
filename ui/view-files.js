@@ -1,7 +1,5 @@
 "use strict";
 
-var filesView;
-
 (function () {
 
 var _editor, _currFile;
@@ -12,9 +10,9 @@ $(function () {
 	$(window).resize(onResize);
 });
 
-filesView = {
-	openFile: selectPath,
-	closeFile: closeFile
+views.files = {
+	openPath: selectPath,
+	closePath: closeFile
 };
 
 function projectChanged (project) {

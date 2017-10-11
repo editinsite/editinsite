@@ -5,6 +5,8 @@ var router;
 var _events = {};
 
 router = {
+	// handleLinkClick will load an <a> element's href without refreshing
+	// the page.
 	handleLinkClick: function (e) {
 		var path = this.getAttribute('href');
 		if (this.target || path[0] !== '/')
@@ -27,9 +29,9 @@ router = {
 		if (!path) path = '/';
 		// TODO: check if already current state?
 		var parts = path.split('/'),
-			action = parts[1],
+			view = parts[1],
 			project = parts[2];
-		setState(project, action, parts.slice(3).join('/'));
+		setState(project, view, parts.slice(3).join('/'));
 	},
 
 	// addHistory adds a relative URL path to the browser history, without
@@ -64,11 +66,15 @@ router = {
 	}
 };
 
-function setState (project, action, subPath) {
+function setState (project, view, subPath) {
 
 	function set () {
-		if (action === 'edit') {
-			filesView.openFile('/'+subPath);
+		view = views[view];
+		view.openPath(view.path = '/'+subPath);
+		if (views.current !== view) {
+			var old = views.current;
+			views.current = view;
+			router.publish('view-change', view, old);
 		}
 	}
 
@@ -91,7 +97,8 @@ function setProject (projectId, callback) {
 					return;
 				}
 			}
-			router.navTo('/projects/' + projectList[0].id);
+			// no project selected...
+			router.navTo('/files/' + projectList[0].id + '/');
 		}
 	});
 }

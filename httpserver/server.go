@@ -156,7 +156,7 @@ func saveHandler(w http.ResponseWriter, r *http.Request, p *projects.Workspace, 
 func Start() error {
 	port := fmt.Sprintf(":%d", config.Values.Port)
 	http.HandleFunc("/projects/", projectHandler)
-	http.HandleFunc("/edit/", editHandler)
+	http.HandleFunc("/files/", editHandler)
 	http.Handle("/", http.FileServer(http.Dir("ui")))
 	return http.ListenAndServe(port, nil)
 }

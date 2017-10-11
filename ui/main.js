@@ -26,14 +26,19 @@ function getProjectList () {
 				showItems = Math.min(projectList.length, 5);
 			for (var i = 0; i < showItems; i++) {
 				var p = projectList[i];
-				$list.append('<li><a href="/edit/' + p.id + '">' + p.name + '</li>');
+				$list.append('<li><a href="/files/' + p.id + '/">' + p.name + '</li>');
 			}
 		}
 	});
 }
 
-function projectChange (newProject, oldProject) {
+function projectChange (newProject) {
 	$('#project-select .current').text('Project: ' + newProject.id);
+	$('#switch-view a').each(function () {
+		var $a = $(this),
+			view = $a.data('view');
+		$a.attr('href', '/' + view + '/' + newProject.id + '/');
+	});
 }
 
 function projectSelectClick (e) {
@@ -53,17 +58,15 @@ function clickDuringProjectSelect (e) {
 	$('#project-select-list').fadeOut(200);
 }
 
-(function () {
-	function checkReady () {
-		$(function () {
-			if (window.monaco) {
-				onLoad();
-			}
-		});
-	}
-	require.config({ paths: { 'vs': '/monaco-editor/min/vs' }});
-	require(['vs/editor/editor.main'], checkReady);
-	$(checkReady);
-})();
+function checkReady () {
+	$(function () {
+		if (window.monaco) {
+			onLoad();
+		}
+	});
+}
+require.config({ paths: { 'vs': '/monaco-editor/min/vs' }});
+require(['vs/editor/editor.main'], checkReady);
+$(checkReady);
 
 })();
