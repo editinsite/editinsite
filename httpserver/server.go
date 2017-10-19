@@ -39,7 +39,17 @@ var projectListTemplate = template.Must(template.New("project").Parse(`<!doctype
 </body>
 </html>`))
 
-func editHandler(w http.ResponseWriter, r *http.Request) {
+// Start will begin serving the editinsite pages and API.
+func Start() error {
+	port := fmt.Sprintf(":%d", config.Values.Port)
+	http.HandleFunc("/projects/", handleProject)
+	http.HandleFunc("/files/", handleEdit)
+	http.HandleFunc("/run/", handleRun)
+	http.Handle("/", http.FileServer(http.Dir("ui")))
+	return http.ListenAndServe(port, nil)
+}
+
+func handleEdit(w http.ResponseWriter, r *http.Request) {
 	path := "ui/index.html"
 	info, err := os.Stat(path)
 	if err != nil {
@@ -55,9 +65,9 @@ func editHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeContent(w, r, info.Name(), info.ModTime(), file)
 }
 
-func projectHandler(w http.ResponseWriter, r *http.Request) {
+func handleProject(w http.ResponseWriter, r *http.Request) {
 	if len(r.URL.Path) > len("/projects/") {
-		fileHandler(w, r)
+		handleFile(w, r)
 	} else {
 		list := projects.SortByID()
 		accept := r.Header.Get("Accept")
@@ -76,48 +86,40 @@ func projectHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func fileHandler(w http.ResponseWriter, r *http.Request) {
+func handleFile(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Path[len("/projects/"):]
-	if strings.Contains(path, "..") {
-		// prevent directory traversal attacks
-		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+	project, path := parseProject(w, r, path)
+	if project == nil {
+		return
+	}
+	path, isDir := parsePath(w, r, project, path)
+	if path == "" {
 		return
 	}
 
-	projEnd := strings.IndexByte(path, '/')
-	if projEnd == -1 {
-		http.Redirect(w, r, r.URL.Path+"/", http.StatusMovedPermanently)
-		return
-	}
-	projectID := path[0:projEnd]
-	project := projects.Registry[projectID]
-
-	filePath := path[projEnd:]
-	isDir := filePath[len(filePath)-1] == '/'
-	if !isDir {
-		var err error
-		isDir, err = project.IsDir(filePath)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		if isDir {
-			http.Redirect(w, r, r.URL.Path+"/", http.StatusMovedPermanently)
-			return
-		}
-	}
 	if isDir {
-		listHandler(w, r, project, filePath)
+		handleList(w, r, project, path)
 	} else {
 		if r.Method == "POST" {
-			saveHandler(w, r, project, filePath)
+			handleSave(w, r, project, path)
 		} else {
-			loadHandler(w, r, project, filePath)
+			handleLoad(w, r, project, path)
 		}
 	}
 }
 
-func listHandler(w http.ResponseWriter, r *http.Request, p *projects.Workspace, subDir string) {
+func handleRun(w http.ResponseWriter, r *http.Request) {
+	path := r.URL.Path[len("/run/"):]
+	project, path := parseProject(w, r, path)
+	if project == nil {
+		return
+	}
+
+	// TODO: serve based on config (static, or proxy for dyn server)
+	handleStatic(w, r, project, path)
+}
+
+func handleList(w http.ResponseWriter, r *http.Request, p *projects.Workspace, subDir string) {
 	list, err := p.Files(subDir)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -137,14 +139,18 @@ func listHandler(w http.ResponseWriter, r *http.Request, p *projects.Workspace, 
 	}
 }
 
-func loadHandler(w http.ResponseWriter, r *http.Request, p *projects.Workspace, file string) {
+func handleLoad(w http.ResponseWriter, r *http.Request, p *projects.Workspace, file string) {
 	if err := p.ServeFile(w, r, file); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		if os.IsNotExist(err) {
+			http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 		return
 	}
 }
 
-func saveHandler(w http.ResponseWriter, r *http.Request, p *projects.Workspace, file string) {
+func handleSave(w http.ResponseWriter, r *http.Request, p *projects.Workspace, file string) {
 	err := p.SaveFile(file, r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -152,11 +158,49 @@ func saveHandler(w http.ResponseWriter, r *http.Request, p *projects.Workspace, 
 	}
 }
 
-// Start will begin serving the editinsite pages and API.
-func Start() error {
-	port := fmt.Sprintf(":%d", config.Values.Port)
-	http.HandleFunc("/projects/", projectHandler)
-	http.HandleFunc("/files/", editHandler)
-	http.Handle("/", http.FileServer(http.Dir("ui")))
-	return http.ListenAndServe(port, nil)
+func handleStatic(w http.ResponseWriter, r *http.Request, p *projects.Workspace, path string) {
+	path, isDir := parsePath(w, r, p, path)
+	if isDir {
+		handleLoad(w, r, p, path+"index.html")
+	} else {
+		// TODO: if index.html, remove filename and redirect to dir. See http.ServeFile
+		handleLoad(w, r, p, path)
+	}
+}
+
+// parseProject returns project (or nil) and relative path of content.
+func parseProject(w http.ResponseWriter, r *http.Request, path string) (*projects.Workspace, string) {
+	if strings.Contains(path, "..") {
+		// prevent directory traversal attacks
+		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+		return nil, ""
+	}
+
+	projEnd := strings.IndexByte(path, '/')
+	if projEnd == -1 {
+		http.Redirect(w, r, r.URL.Path+"/", http.StatusMovedPermanently)
+		return nil, ""
+	}
+	projectID := path[0:projEnd]
+	project := projects.Registry[projectID]
+	path = path[projEnd:]
+	return project, path
+}
+
+// parsePath returns file path (or "") and true if directory.
+func parsePath(w http.ResponseWriter, r *http.Request, p *projects.Workspace, path string) (string, bool) {
+	isDir := path[len(path)-1] == '/'
+	if !isDir {
+		var err error
+		isDir, err = p.IsDir(path)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return "", false
+		}
+		if isDir {
+			http.Redirect(w, r, r.URL.Path+"/", http.StatusMovedPermanently)
+			return "", true
+		}
+	}
+	return path, isDir
 }
