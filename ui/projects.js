@@ -62,7 +62,7 @@ var projects;
 		},
 
 		editUrl: function (file) {
-			return '/edit/' + this.fileUrl(file);
+			return '/files/' + this.fileUrl(file);
 		}
 	};
 
