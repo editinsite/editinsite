@@ -37,7 +37,9 @@ router = {
 	// addHistory adds a relative URL path to the browser history, without
 	// actually navigating to it.
 	addHistory: function (path) {
+		var oldPath = window.location.pathname;
 		history.pushState({path: path}, '', path);
+		router.publish('url-change', path, oldPath);
 	},
 
 	// refresh will reload the current state.

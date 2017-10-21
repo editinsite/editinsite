@@ -43,13 +43,14 @@ var projectListTemplate = template.Must(template.New("project").Parse(`<!doctype
 func Start() error {
 	port := fmt.Sprintf(":%d", config.Values.Port)
 	http.HandleFunc("/projects/", handleProject)
-	http.HandleFunc("/files/", handleEdit)
+	http.HandleFunc("/files/", handleEditor)
+	http.HandleFunc("/preview/", handleEditor)
 	http.HandleFunc("/run/", handleRun)
 	http.Handle("/", http.FileServer(http.Dir("ui")))
 	return http.ListenAndServe(port, nil)
 }
 
-func handleEdit(w http.ResponseWriter, r *http.Request) {
+func handleEditor(w http.ResponseWriter, r *http.Request) {
 	path := "ui/index.html"
 	info, err := os.Stat(path)
 	if err != nil {

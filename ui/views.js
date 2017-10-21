@@ -12,6 +12,7 @@ $(function () {
 
     $('#switch-view').on('click', 'a', viewChangeClick);
     router.subscribe('view-change', viewChange);
+    router.subscribe('url-change', urlChange);
 });
 
 function viewChangeClick (e) {
@@ -19,6 +20,7 @@ function viewChangeClick (e) {
 
 	var view = $(this).data('view');
     viewChange(views[view]);
+    router.addHistory(this.getAttribute('href'));
 }
 
 function viewChange (newView) {
@@ -31,6 +33,10 @@ function viewChange (newView) {
     var $view = $('#view-' + newView.id);
     $view.siblings().hide();
     $view.show();
+}
+
+function urlChange (newUrl) {
+    $('#switch-view a.active').attr('href', newUrl);
 }
 
 })();
