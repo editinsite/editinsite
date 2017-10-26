@@ -1,10 +1,15 @@
 "use strict";
 
+/* TODO:
+  1. warn user if unable to talk to iframe page, give option to
+     trust content (use same domain).
+*/
+
 (function () {
 
 $(function () {
 	frameElement().onload = frameLoaded();
-	frameWindow().location = "http://localhost:8081";
+	frameWindow().location = serverConfig.untrustedOrigin;
 });
 
 views.preview = {
@@ -29,7 +34,7 @@ function openPath (path) {
 			+ content.slice(headStart);
 
 		var frame = frameWindow();
-		frame.postMessage(content, '*');
+		frame.postMessage(content, serverConfig.untrustedOrigin);
 	});
 }
 
