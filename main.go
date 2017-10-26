@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/editinsite/editinsite/config"
 	"github.com/editinsite/editinsite/httpserver"
@@ -15,7 +16,11 @@ import (
 
 func main() {
 	if err := config.ParseFlags(); err != nil {
-		return
+		// Error message already shown with usage details
+		if err == config.ErrHelp {
+			return
+		}
+		os.Exit(1)
 	}
 	if err := config.Apply(); err != nil {
 		fmt.Printf("%v\n", err)
@@ -29,5 +34,10 @@ func main() {
 	projects.LoadAll(config.Values.Projects)
 	fmt.Printf("Starting EditInsite v%s server on port %d...\n",
 		config.Version, config.Values.Port)
-	log.Fatalln(httpserver.Start())
+	go func() {
+		httpserver.StartUntrusted()
+	}()
+	if err := httpserver.Start(); err != nil {
+		log.Fatalf("%v\n", err)
+	}
 }

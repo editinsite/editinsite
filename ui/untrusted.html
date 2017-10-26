@@ -1,0 +1,17 @@
+<html lang="en">
+<head>
+<meta charset="utf-8">
+
+<script>
+window.addEventListener("message", receiveMessage, false);
+function receiveMessage(event)
+{
+	document.open();
+	document.write(event.data);
+	document.close();
+}
+</script>
+
+</head>
+<body></body>
+</html>

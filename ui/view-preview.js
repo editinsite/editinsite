@@ -3,7 +3,8 @@
 (function () {
 
 $(function () {
-
+	frameElement().onload = frameLoaded();
+	frameWindow().location = "http://localhost:8081";
 });
 
 views.preview = {
@@ -27,17 +28,26 @@ function openPath (path) {
 			+ '<base href="' + window.location.href.replace('/preview/', '/run/') + '">'
 			+ content.slice(headStart);
 
-		// IE uses contentWindow.document
-		var iframe = document.getElementById('preview-frame'),
-			doc = iframe.contentDocument || iframe.contentWindow.document;
-		doc.open();
-		doc.write(content);
-		doc.close();
+		var frame = frameWindow();
+		frame.postMessage(content, '*');
 	});
 }
 
 function closePath () {
 
+}
+
+function frameLoaded () {
+	frameElement().onload = null; // only once
+}
+
+function frameElement () {
+	return document.getElementById('preview-frame');
+}
+
+function frameWindow () {
+	var iframe = frameElement();
+	return iframe.contentWindow || iframe;
 }
 
 })();
