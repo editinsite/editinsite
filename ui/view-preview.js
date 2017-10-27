@@ -7,12 +7,14 @@
 
 (function () {
 
+var _view, _path;
+
 $(function () {
-	frameElement().onload = frameLoaded();
+	window.addEventListener("message", receiveMessage, false);
 	frameWindow().location = serverConfig.untrustedOrigin;
 });
 
-views.preview = {
+_view = views.preview = {
 	openPath: openPath,
 	closePath: closePath
 };
@@ -42,16 +44,17 @@ function closePath () {
 
 }
 
-function frameLoaded () {
-	frameElement().onload = null; // only once
-}
-
-function frameElement () {
-	return document.getElementById('preview-frame');
+function receiveMessage (event) {
+	if (event.origin !== serverConfig.untrustedOrigin)
+		return;
+	var msg = event.data;
+	if (msg === 'load') {
+		if (_view.path) openPath(_view.path);
+	}
 }
 
 function frameWindow () {
-	var iframe = frameElement();
+	var iframe = document.getElementById('preview-frame');
 	return iframe.contentWindow || iframe;
 }
 

@@ -3,13 +3,13 @@
 <meta charset="utf-8">
 
 <script>
-window.addEventListener("message", receiveMessage, false);
-function receiveMessage(event)
-{
+function receiveMessage(event) {
 	document.open();
 	document.write(event.data);
 	document.close();
 }
+window.addEventListener("message", receiveMessage, false);
+window.parent.postMessage("load", "*");
 </script>
 
 </head>
