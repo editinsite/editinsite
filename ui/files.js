@@ -13,14 +13,27 @@ var ProjectFile;
 	};
 
 	ProjectFile.prototype = {
-		download: function (callback) {
-			var file = this;
-			if (file.body) {
-				callback(file);
+
+		savedContent: function (callback) {
+			if (this.body) {
+				callback(this, this.body);
 				return;
 			}
+			this.download(callback);
+		},
 
-			var url = projects.current.rawUrl(file),
+		liveContent: function (callback) {
+			if (this.model) {
+				var body = this.model.getValue();
+				callback(this, body);
+				return;
+			}
+			this.savedContent(callback);
+		},
+
+		download: function (callback) {
+			var file = this,
+				url = projects.current.rawUrl(file),
 				oReq = new XMLHttpRequest();
 
 			oReq.onload = function () {
@@ -42,7 +55,7 @@ var ProjectFile;
 							file.body = blob;
 						}
 					}
-					callback(file);
+					callback(file, file.body);
 				}
 				else
 					callback(null);
