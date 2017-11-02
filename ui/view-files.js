@@ -209,7 +209,6 @@ function showInEditor (file) {
 		_editor.onDidChangeModelContent(fileUpdated);
 	}
 
-	var oldModel = _editor.getModel();
 	var newModel = file.model || monaco.editor.createModel(file.body, file.lang.id);
 	file.model = newModel;
 	_editor.setModel(newModel);
@@ -264,6 +263,14 @@ function fileUpdated () {
 
 	$('#file-save-button').toggleClass('dirty', dirty);
 	$link.toggleClass('dirty', dirty);
+
+	completeUpdate();
 }
+
+var completeUpdate = $.debounce(function () {
+	if (_currFile) {
+		router.publish('file-edit', _currFile);
+	}
+}, 750);
 
 })();

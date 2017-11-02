@@ -12,6 +12,7 @@ var _view, _path;
 $(function () {
 	window.addEventListener("message", receiveMessage, false);
 	frameWindow().location = serverConfig.untrustedOrigin;
+	router.subscribe('file-edit', fileEdit);
 });
 
 _view = views.preview = {
@@ -20,28 +21,24 @@ _view = views.preview = {
 };
 
 function openPath (path) {
+	// TODO: get existing instead of creating new.
 	var file = new ProjectFile("index.html");
-	file.download(function (file) {
-		var content = file.body,
-			contentL = content.toLowerCase(),
-			headStart = contentL.indexOf('<head');
-		if (headStart === -1) {
-			alert('Page does not have a properly-formed <head>.');
-			return;
-		}
-		headStart = contentL.indexOf('>', headStart)+1;
-
-		content = content.slice(0, headStart)
-			+ '<base href="' + window.location.href.replace('/preview/', '/run/') + '">'
-			+ content.slice(headStart);
-
-		var frame = frameWindow();
-		frame.postMessage(content, serverConfig.untrustedOrigin);
-	});
+	openFile(file);
 }
 
 function closePath () {
 
+}
+
+function openFile (file) {
+	file.liveContent(function (file, content) {
+		sendMessage(sandboxContent(content));
+	});
+}
+
+function sendMessage (msg) {
+	var frame = frameWindow();
+	frame.postMessage(msg, '*');//serverConfig.untrustedOrigin);
 }
 
 function receiveMessage (event) {
@@ -51,6 +48,38 @@ function receiveMessage (event) {
 	if (msg === 'load') {
 		if (_view.path) openPath(_view.path);
 	}
+}
+
+function fileEdit (file) {
+	openFile(file);
+}
+
+function sandboxContent (content) {
+
+	var contentL = content.toLowerCase(),
+		headStart = contentL.indexOf('<head');
+	if (headStart === -1) {
+		alert('Page does not have a properly-formed <head>.');
+		return;
+	}
+	headStart = contentL.indexOf('>', headStart)+1;
+
+	var newHead = '<base href="' + window.location.origin + '/run/'
+		+ projects.current.id + _view.path + '">\
+	<script>\
+	function receiveMessage(event) {\
+		document.open();\
+		document.write(event.data);\
+		document.close();\
+	}\
+	window.addEventListener("message", receiveMessage, false);\
+	</script>';
+
+	content = content.slice(0, headStart)
+		+ newHead
+		+ content.slice(headStart);
+
+	return content;
 }
 
 function frameWindow () {

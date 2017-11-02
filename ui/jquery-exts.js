@@ -8,7 +8,7 @@
                 $el.show();
     
                 if (!$el.data('delayFn')) {
-                    $el.data('delayFn', debounce(function () {
+                    $el.data('delayFn', $.debounce(function () {
                         if ($el.is(':visible'))
                             $el.find('.progress').show();
                     }, 250));
@@ -23,7 +23,7 @@
 
     // debounce returns a function that can be used to call func() on a delay.
     // If `immediate` is true, func() is called on leading rather than trailing edge.
-    function debounce (func, delayMs, immediate) {
+    $.debounce = function (func, delayMs, immediate) {
         var timer;
         return function () {
             var context = this,
@@ -39,7 +39,7 @@
                 func.apply(context, args);
             }
         };
-    }
+    };
 
     var _doOnceJobSet = {};
 
