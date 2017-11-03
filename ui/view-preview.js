@@ -38,7 +38,7 @@ function openFile (file) {
 
 function sendMessage (msg) {
 	var frame = frameWindow();
-	frame.postMessage(msg, '*');//serverConfig.untrustedOrigin);
+	frame.postMessage(msg, serverConfig.untrustedOrigin);
 }
 
 function receiveMessage (event) {
@@ -51,7 +51,7 @@ function receiveMessage (event) {
 }
 
 function fileEdit (file) {
-	openFile(file);
+	openPath();
 }
 
 function sandboxContent (content) {
