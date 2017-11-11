@@ -34,13 +34,16 @@ var projects;
 
 	var Project = function (attributes) {
 		$.extend(this, attributes);
+		this.root = new ProjectFile('/', this);
+		this.root.project = this;
 	};
 
 	Project.prototype = {
 	    getFileList: function (subDir, callback) {
+			subDir = subDir || this.root;
 			$.ajax({
 				method: 'POST',
-				url: this.rawUrl(subDir),
+				url: subDir.rawUrl(),
 				dataType: 'json'
 			})
 			.done (function (files) {
@@ -50,19 +53,6 @@ var projects;
 			.fail (function () {
 				callback(null);
 			});
-		},
-
-		fileUrl: function (file) {
-			return file ? (this.fileUrl(file.parent) + file.name)
-				: (this.id + '/');
-		},
-
-		rawUrl: function (file) {
-			return '/projects/' + this.fileUrl(file);
-		},
-
-		editUrl: function (file) {
-			return '/files/' + this.fileUrl(file);
 		}
 	};
 

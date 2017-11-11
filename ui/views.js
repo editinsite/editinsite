@@ -28,7 +28,7 @@ function viewChange (newView) {
     var $link = $('#switch-view a[data-view=' + newView.id + ']');
 	$link.addClass('active');
     if (!newView.path) {
-        newView.openPath(newView.path = '/');
+        newView.openPath('/');
     }
     var $view = $('#view-' + newView.id);
     $view.siblings().hide();

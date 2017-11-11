@@ -4,9 +4,12 @@ var ProjectFile;
 
 (function () {
 
-	ProjectFile = function (name, parent, attributes) {
+	ProjectFile = function (name, parentOrProject, attributes) {
 		this.name = name;
-		this.parent = parent;
+		if (parentOrProject.isDir)
+			this.parent = parentOrProject;
+		else
+			this.project = parentOrProject;
 		this.isDir = name[name.length-1] === '/';
 		this.lang = fileLanguageFromName(name);
 		$.extend(this, attributes);
@@ -33,7 +36,7 @@ var ProjectFile;
 
 		download: function (callback) {
 			var file = this,
-				url = projects.current.rawUrl(file),
+				url = file.rawUrl(),
 				oReq = new XMLHttpRequest();
 
 			oReq.onload = function () {
@@ -67,16 +70,33 @@ var ProjectFile;
 		},
  
 		upload: function (callback) {
-			var url = projects.current.rawUrl(this),
+			var url = this.rawUrl(),
 				oReq = new XMLHttpRequest();
 			oReq.onload = callback;
 			oReq.open('POST', url);
 			oReq.send(new TextEncoder().encode(this.body));
 		},
 
-		path: function () {
-			return this.parent ? (this.parent.path() + this.name)
+		pathInProject: function () {
+			return this.parent ? (this.parent.pathInProject() + this.name)
 				: this.name;
+		},
+
+		pathWithProject: function () {
+			return this.parent ? (this.parent.pathWithProject() + this.name)
+			: this.project.id + this.name;
+		},
+
+		rawUrl: function () {
+			return '/projects/' + this.pathWithProject();
+		},
+
+		editUrl: function () {
+			return '/files/' + this.pathWithProject();
+		},
+
+		project: function () {
+			return this.project || this.parent.project();
 		}
 	};
 

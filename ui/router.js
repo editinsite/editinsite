@@ -72,7 +72,7 @@ function setState (project, view, subPath) {
 
 	function set () {
 		view = views[view];
-		view.openPath(view.path = '/'+subPath);
+		view.openPath('/'+subPath);
 		if (views.current !== view) {
 			var old = views.current;
 			views.current = view;

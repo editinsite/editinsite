@@ -2,7 +2,7 @@
 
 (function () {
 
-var _editor, _currFile;
+var _view, _editor, _currFile;
 
 $(function () {
 	$('#files').on('click', 'a', fileNameClick);
@@ -10,7 +10,7 @@ $(function () {
 	$(window).resize(onResize);
 });
 
-views.files = {
+_view = views.files = {
 	openPath: selectPath,
 	closePath: closeFile
 };
@@ -29,7 +29,7 @@ function showFileList ($parent, dir, callback) {
 		callback && callback($list);
 		return;
 	}
-	var url = projects.current.rawUrl(dir);
+	var url = dir.rawUrl();
 	$.doOnce(url, callback, function (callback) {
 		projects.current.getFileList(dir, function (fileList) {
 			if (!fileList) {
@@ -44,8 +44,8 @@ function showFileList ($parent, dir, callback) {
 					icon = '<i class="far fa-angle-right"></i>';
 				$('<li></li>').append(
 					$('<a class="filelink" href="'
-						+ projects.current.editUrl(file)
-						+ '" title="/' + file.path() + '">'
+						+ file.editUrl()
+						+ '" title="' + file.pathInProject() + '">'
 						+ icon + file.name + '</a>')
 						.data('file', file)
 				).appendTo($list);
@@ -84,7 +84,8 @@ function expandDir (path, callback) {
 
 	function expand ($parent, path, callback) {
 		var dirEnd = path.indexOf('/'),
-			dirName = path.slice(0, dirEnd+1);
+			dirName = path.slice(0, dirEnd+1),
+			dir;
 		path = path.slice(dirEnd+1);
 		var $dirLink, $newParent;
 		if ($parent) {
@@ -94,11 +95,13 @@ function expandDir (path, callback) {
 				return;
 			}
 			$newParent = $dirLink.parent();
+			dir = $dirLink.data('file');
 		}
 		else {
 			$newParent = $('#files');
+			dir = projects.current.root;
 		}
-		showFileList($newParent, $dirLink && $dirLink.data('file'), function ($list) {
+		showFileList($newParent, dir, function ($list) {
 			if ($list) {
 				$list.siblings('.filelink').addClass('expanded');
 				if (path.length !== 0)
@@ -116,6 +119,8 @@ function expandDir (path, callback) {
 }
 
 function selectPath (filePath) {
+	_view.path = filePath;
+
 	var dirEnd = filePath.lastIndexOf('/');
 	var dir = filePath.slice(0, dirEnd+1),
 		fileName = filePath.slice(dirEnd+1);
@@ -159,8 +164,8 @@ function openFile (file) {
 	file.download(function (file) {
 		$('.loading.editor').loading(false);
 		showInEditor(file);
-		$('#file-bar .open-raw').attr('href', projects.current.rawUrl(file));
-		$('#file-bar .path').html(file.path());
+		$('#file-bar .open-raw').attr('href', file.rawUrl());
+		$('#file-bar .path').html(file.pathInProject());
 		$('#file-bar').show();
 	});
 }
@@ -259,7 +264,7 @@ function clearDirty () {
 function fileUpdated () {
 	var dirty = fileIsDirty();
 	var $link = $('#files .filelink[href="'
-		+ projects.current.editUrl(_currFile) + '"]');
+		+ _currFile.editUrl() + '"]');
 
 	$('#file-save-button').toggleClass('dirty', dirty);
 	$link.toggleClass('dirty', dirty);

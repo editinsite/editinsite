@@ -7,7 +7,7 @@
 
 (function () {
 
-var _view, _path;
+var _view;
 
 $(function () {
 	window.addEventListener("message", receiveMessage, false);
@@ -21,8 +21,10 @@ _view = views.preview = {
 };
 
 function openPath (path) {
+	_view.path = path;
+
 	// TODO: get existing instead of creating new.
-	var file = new ProjectFile("index.html");
+	var file = new ProjectFile("index.html", projects.current.root);
 	openFile(file);
 }
 
@@ -51,7 +53,7 @@ function receiveMessage (event) {
 }
 
 function fileEdit (file) {
-	openPath();
+	openPath('/');
 }
 
 function sandboxContent (content) {
