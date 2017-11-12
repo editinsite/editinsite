@@ -11,7 +11,12 @@ var ProjectFile;
 		else
 			this.project = parentOrProject;
 		this.isDir = name[name.length-1] === '/';
-		this.lang = fileLanguageFromName(name);
+		if (this.isDir) {
+			this.children = null;
+			this._loaded = false;
+		}
+		else
+			this.lang = fileLanguageFromName(name);
 		$.extend(this, attributes);
 	};
 
@@ -77,6 +82,50 @@ var ProjectFile;
 			oReq.send(new TextEncoder().encode(this.body));
 		},
 
+		getFileList: function (callback) {
+			var dir = this;
+			if (dir._loaded) {
+				callback(dir.children);
+				return;
+			}
+			dir.getProject().listDir(dir.pathInProject(), function (files) {
+				if (files) {
+					files = dir.setFileList(files);
+				}
+				callback(files);
+			});
+		},
+
+		setFileList: function (namesList) {
+			var fileList = this.children || [];
+			for (var i = 0; i < namesList.length; i++) {
+				var name = namesList[i],
+					lname = name.toLowerCase();
+				if (this.children) {
+					for (var j = fileList.length; j--;) {
+						if (fileList[j].name.toLowerCase() === lname) {
+							fileList[j].name = name;
+							break;
+						}
+					}
+					if (j >= 0) continue;
+				}
+				fileList.push(new ProjectFile(name, this));
+			}
+			sortFiles(fileList);
+			this.children = fileList;
+			this._loaded = true;
+			return fileList;
+		},
+
+		getChildFile: function (path) {
+			return getChild(this, path, false);
+		},
+
+		addChildFile: function (path) {
+			return getChild(this, path, true);
+		},
+
 		pathInProject: function () {
 			return this.parent ? (this.parent.pathInProject() + this.name)
 				: this.name;
@@ -95,7 +144,7 @@ var ProjectFile;
 			return '/files/' + this.pathWithProject();
 		},
 
-		project: function () {
+		getProject: function () {
 			return this.project || this.parent.project();
 		}
 	};
@@ -142,6 +191,55 @@ var ProjectFile;
 				return false;
 		}
 		return true;
+	}
+
+	function sortFiles (fileList) {
+		fileList.sort(function(a, b) {
+			var lastCh = a[a.length-1];
+			if (a.isDir !== b.isDir) {
+				return a.isDir ? -1 : 1;
+			}
+			return a.name.localeCompare(b.name);
+		});
+	}
+
+	// Get or add ProjectFile at `path` relative to `dir`.
+	function getChild (dir, path, addMissing) {
+		if (!path && path !== '') return;
+		while (path[0] === '/') path = path.slice(1);
+		if (path.length === 0) return dir;
+
+		var nextPartEnd = path.indexOf('/')+1,
+			nextPartName, remainingPath;
+		if (nextPartEnd === 0) {
+			nextPartName = path;
+			remainingPath = null;
+		}
+		else {
+			nextPartName = path.slice(0, nextPartEnd);
+			remainingPath = path.slice(nextPartEnd);
+		}
+		nextPartName = nextPartName.toLowerCase();
+
+		var nextPart;
+		if (dir.children) {
+			for (var i = dir.children.length; i--;) {
+				if (dir.children[i].name.toLowerCase() === nextPartName) {
+					nextPart = dir.children[i];
+					break;
+				}
+			}
+		}
+		if (!nextPart) {
+			if (!addMissing) return;
+			dir.children = dir.children || [];
+			nextPart = new ProjectFile(nextPart, dir);
+			dir.children.push(nextPart);
+		}
+
+		return remainingPath ?
+			getChild(nextPart, remainingPath, addMissing)
+			: nextPart;
 	}
 
 })();

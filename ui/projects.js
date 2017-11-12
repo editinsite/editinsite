@@ -39,41 +39,56 @@ var projects;
 	};
 
 	Project.prototype = {
-	    getFileList: function (subDir, callback) {
-			subDir = subDir || this.root;
-			$.ajax({
-				method: 'POST',
-				url: subDir.rawUrl(),
-				dataType: 'json'
-			})
-			.done (function (files) {
-				var fileList = fileListFromNames(files, subDir);
-				callback(fileList);
-			})
-			.fail (function () {
+
+		// Return existing or new ProjectFile object from the project's hierarchy.
+		// It will verify that the file exists.
+	    getFile: function (path, callback) {
+			var project = this,
+				file = project.root.getChildFile(path);
+			if (file) {
+				callback(file);
+				return;
+			}
+			if (!path && path !== '')
+				return;
+			var parentPathEnd = path.lastIndexOf('/'),
+				parentPath = path.slice(0, parentPathEnd+1),
+				parent = project.root.getChildFile(parentPath),
+				name = (parentPathEnd === -1) ? path : path.slice(parentPathEnd+1);
+			if (parent) {
 				callback(null);
+				return;
+			}
+			this.listDir(parentPath, function (files) {
+				if (files) {
+					// dir's existence is verified, add to tree
+					parent = project.root.addChildFile(parentPath);
+					parent.setFileList(files);
+					callback(parent.getChildFile(name));
+				}
+				else {
+					callback(null);
+				}
+			});
+		},
+
+		listDir: function (path, callback) {
+			if (path[0] !== '/') path = '/' + path;
+			var dirUrl = '/projects/' + this.id + path;
+			$.doOnce(dirUrl, callback, function (callback) {
+				$.ajax({
+					method: 'POST',
+					url: dirUrl,
+					dataType: 'json'
+				})
+				.done (function (files) {
+					callback(files);
+				})
+				.fail (function () {
+					callback(null);
+				});
 			});
 		}
 	};
-
-	function fileListFromNames (nameList, parentDir) {
-		var fileList = [];
-		for (var i = 0; i < nameList.length; i++) {
-			var name = nameList[i];
-			fileList.push(new ProjectFile(name, parentDir));
-		}
-		sortFiles(fileList);
-		return fileList;
-	}
-
-	function sortFiles (fileList) {
-		fileList.sort(function(a, b) {
-			var lastCh = a[a.length-1];
-			if (a.isDir !== b.isDir) {
-				return a.isDir ? -1 : 1;
-			}
-			return a.name.localeCompare(b.name);
-		});
-	}
 
 })();

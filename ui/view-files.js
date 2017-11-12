@@ -29,30 +29,28 @@ function showFileList ($parent, dir, callback) {
 		callback && callback($list);
 		return;
 	}
-	var url = dir.rawUrl();
-	$.doOnce(url, callback, function (callback) {
-		projects.current.getFileList(dir, function (fileList) {
-			if (!fileList) {
-				callback(null);
-				return;
-			}
-			var $list = $('<ul class="filelist"></ul>');
-			for (var i = 0; i < fileList.length; i++) {
-				var file = fileList[i],
-					icon = '';
-				if (file.isDir)
-					icon = '<i class="far fa-angle-right"></i>';
-				$('<li></li>').append(
-					$('<a class="filelink" href="'
-						+ file.editUrl()
-						+ '" title="' + file.pathInProject() + '">'
-						+ icon + file.name + '</a>')
-						.data('file', file)
-				).appendTo($list);
-			}
-			$list.appendTo($parent);
-			callback($list);
-		});
+	dir.getFileList(function (fileList) {
+		if (!fileList) {
+			callback(null);
+			return;
+		}
+		var $list = $('<ul class="filelist"></ul>');
+		for (var i = 0; i < fileList.length; i++) {
+			var file = fileList[i],
+				icon = '';
+			if (file.isDir)
+				icon = '<i class="far fa-angle-right"></i>';
+			$('<li></li>').append(
+				$('<a class="filelink" href="'
+					+ file.editUrl()
+					+ '" title="' + file.pathInProject() + '">'
+					+ icon + file.name + '</a>')
+					.data('file', file)
+			).appendTo($list);
+		}
+		$parent.children('.filelist').remove();
+		$list.appendTo($parent);
+		callback($list);
 	});
 }
 

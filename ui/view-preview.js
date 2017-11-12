@@ -22,10 +22,10 @@ _view = views.preview = {
 
 function openPath (path) {
 	_view.path = path;
-
-	// TODO: get existing instead of creating new.
-	var file = new ProjectFile("index.html", projects.current.root);
-	openFile(file);
+	projects.current.getFile("index.html", function (file) {
+		if (file)
+			openFile(file);
+	});
 }
 
 function closePath () {
