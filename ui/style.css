@@ -87,7 +87,8 @@ header a .fa-caret-down {
   display: inline-block;
   text-align: center;
   padding: 0 2em;
-  height: 28px;
+  height: 30px;
+  box-sizing: border-box;
 }
 #switch-view a:hover {
   color: #fff;
@@ -104,8 +105,8 @@ Views
   position: absolute;
   left: 0;
   right: 0;
-  top: 31px;
-  bottom: 25px;
+  top: 30px;
+  bottom: 0;
 }
 #views > div {
   display: none;
@@ -193,13 +194,14 @@ File editor view
 .editor-frame {
   position: absolute;
   top: 60px;
-  bottom: 0;
+  bottom: 2px;
   width: 100%;
 }
 #editor {
   position: absolute;
   width: 100%;
   height: 100%;
+  overflow: hidden;
 }
 #editor .image-file {
   padding: 10px;
@@ -280,6 +282,7 @@ Web page preview view
   background: #fff;
 }
 #preview-frame {
+  display: block;
   width: 100%;
   height: 100%;
   border: none;
