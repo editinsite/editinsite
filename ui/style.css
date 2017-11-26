@@ -43,11 +43,38 @@ a {
 }
 
 /**************************************
+Universal menu button
+*/
+#god-btn {
+  display: none;
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  width: 50px;
+  height: 50px;
+  background: #00ffa1;
+  background: radial-gradient(ellipse at center, #00ffa1 0%,#001972 100%);
+  border-radius: 50%;
+  border: 3px solid #fff;
+  box-shadow: 0 2px 5px #444;
+  cursor: pointer;
+  transition: box-shadow .3s ease-in-out;
+}
+#god-btn:hover {
+  background: #7ee1ff;
+  background: radial-gradient(ellipse at center, #7ee1ff 0%,#4a88ab 100%);
+  box-shadow: 0 0 40px #004eff;
+}
+
+/**************************************
 App header
 */
 header {
+  display: none;
   padding: 0 10px;
   line-height: 30px;
+  left: 0;
+  right: 0;
 }
 header a .fa-caret-down {
   margin-left: 8px;
@@ -98,6 +125,23 @@ header a .fa-caret-down {
   border-bottom: 2px solid #007fff;
 }
 
+#header-close {
+  float: right;
+  font-size: 1.2em;
+  height: 30px;
+  cursor: pointer;
+  color: #fff;
+  background: none;
+  border: none;
+  outline: none;
+}
+#header-close i {
+  vertical-align: middle;
+}
+#header-close:hover {
+  background: #383838;
+}
+
 /**************************************
 Views
 */
@@ -105,7 +149,7 @@ Views
   position: absolute;
   left: 0;
   right: 0;
-  top: 30px;
+  top: 0;
   bottom: 0;
 }
 #views > div {
