@@ -45,13 +45,11 @@ a {
 /**************************************
 Universal menu button
 */
-#god-btn {
+#menu-btn {
   display: none;
   position: fixed;
-  bottom: 10px;
-  right: 10px;
-  width: 50px;
-  height: 50px;
+  bottom: 35px;
+  right: 35px;
   background: #00ffa1;
   background: radial-gradient(ellipse at center, #00ffa1 0%,#001972 100%);
   border-radius: 50%;
@@ -60,7 +58,7 @@ Universal menu button
   cursor: pointer;
   transition: box-shadow .3s ease-in-out;
 }
-#god-btn:hover {
+#menu-btn:hover {
   background: #7ee1ff;
   background: radial-gradient(ellipse at center, #7ee1ff 0%,#4a88ab 100%);
   box-shadow: 0 0 40px #004eff;
@@ -69,14 +67,14 @@ Universal menu button
 /**************************************
 App header
 */
-header {
+#menu-bar {
   display: none;
   padding: 0 10px;
   line-height: 30px;
   left: 0;
   right: 0;
 }
-header a .fa-caret-down {
+#menu-bar a .fa-caret-down {
   margin-left: 8px;
 }
 
@@ -125,7 +123,7 @@ header a .fa-caret-down {
   border-bottom: 2px solid #007fff;
 }
 
-#header-close {
+#menu-bar-close {
   float: right;
   font-size: 1.2em;
   height: 30px;
@@ -135,10 +133,10 @@ header a .fa-caret-down {
   border: none;
   outline: none;
 }
-#header-close i {
+#menu-bar-close i {
   vertical-align: middle;
 }
-#header-close:hover {
+#menu-bar-close:hover {
   background: #383838;
 }
 

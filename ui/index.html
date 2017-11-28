@@ -16,7 +16,7 @@
 	<link rel="stylesheet" href="/style.css">
 </head>
 <body>
-	<header>
+	<header id="menu-bar">
 		<a id="project-select" href="#">
 			<span class="current">Projects</span><i class="fa fa-caret-down"></i>
 		</a>
@@ -26,7 +26,7 @@
 		<nav id="switch-view">
 			<a href="#" data-view="files">Files</a><a href="#" data-view="preview">Preview</a>
 		</nav>
-		<button id="header-close"><i class="fa fa-times"></i></button>
+		<button id="menu-bar-close"><i class="fa fa-times"></i></button>
 	</header>
 	<div id="views">
 		<div id="view-files">
@@ -51,7 +51,7 @@
 			<iframe id="preview-frame" src="about:blank"></iframe>
 		</div>
 	</div>
-	<div id="god-btn"></div>
+	<div id="menu-btn"></div>
 	<script src="/jquery-3.2.1.min.js"></script>
 	<script src="/jquery-exts.js"></script>
 	<script src="/monaco-editor/min/vs/loader.js"></script>
@@ -64,6 +64,7 @@
 	<script src="/views.js"></script>
 	<script src="/view-files.js"></script>
 	<script src="/view-preview.js"></script>
+	<script src="/menu.js"></script>
 	<script src="/main.js"></script>
 </body>
 </html>
