@@ -48,8 +48,6 @@ Universal menu button
 #menu-btn {
   display: none;
   position: fixed;
-  bottom: 35px;
-  right: 35px;
   background: #00ffa1;
   background: radial-gradient(ellipse at center, #00ffa1 0%,#001972 100%);
   border-radius: 50%;

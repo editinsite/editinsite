@@ -6,8 +6,8 @@ var menu = {};
 
 menu.load = function () {
     registerEvents();
-    getProjectList();
-    showMenuButton();
+	getProjectList();
+	loadMenuState();
 };
 
 function registerEvents () {
@@ -18,11 +18,70 @@ function registerEvents () {
 	$('#menu-bar-close').click(function () {
 		hideMenuBar(true);
 		showMenuButton(true);
+		saveMenuState();
 	});
 	$('#menu-btn')
 		.click(menuButtonClick)
         .mousedown(menuButtonMouseDown);
 }
+
+function applyMenuState (state) {
+	var btnStyle = document.getElementById('menu-btn').style;
+	btnStyle[state.sideX] = state.x + 'px';
+	btnStyle[state.sideY] = state.y + 'px';
+	if (state.visible) {
+		hideMenuBar();
+		showMenuButton();
+	}
+	else {
+		hideMenuButton();
+		showMenuBar();
+	}
+}
+
+function loadMenuState () {
+	var state = localStorage.getItem('mbutton');
+	if (state) {
+		var yStart = state.indexOf('/');
+		if (yStart === -1) {
+			localStorage.removeItem('mbutton');
+			loadMenuState();
+			return;
+		}
+		state = {
+			visible: state[0] === 'Y',
+			sideX: state[1] === 'l' ? 'left' : 'right',
+			sideY: state[yStart+1] === 't' ? 'top' : 'bottom',
+			x: parseInt(state.slice(2, yStart)),
+			y: parseInt(state.slice(yStart+2))
+		};
+	}
+	else {
+		state = {
+			visible: false,
+			sideX: 'right',
+			sideY: 'bottom',
+			x: 35,
+			y: 35
+		}
+	}
+	applyMenuState(state);
+}
+
+function saveMenuState () {
+	var $btn = $('#menu-btn'),
+		style = $btn[0].style,
+		sideX = (style.left && style.left !== 'auto') ? 'left' : 'right',
+		sideY = (style.top && style.top !== 'auto') ? 'top' : 'bottom',
+		x = parseInt(style[sideX]),
+		y = parseInt(style[sideY]),
+		isOn = !$btn.hasClass('hidden');
+	localStorage.setItem('mbutton',
+		(isOn ? 'Y': 'N') + sideX[0] + x + '/' + sideY[0] + y);
+}
+
+////////////////////////
+// Project Selector
 
 function getProjectList () {
 	projects.getList(function (projectList) {
@@ -63,19 +122,23 @@ function clickDuringProjectSelect (e) {
 	$('#project-select-list').fadeOut(200);
 }
 
+////////////////////////
+// Menu Bar
+
 function showMenuBar (animate) {
 	var $mb = $('#menu-bar').stop(),
-		$content = $('#views').stop();
+		$content = $('#views').stop(),
+		mbHeight = $mb.outerHeight();
 	if (animate) {
-		$mb.css({display: 'block', position: 'absolute'})
+		$mb.css({display: 'block', position: 'absolute', top: -mbHeight})
 			.animate({top: 0, opacity: 1}, function () {
 				$mb.css({position: 'static'});
 			});
-		$content.animate({top: $mb.outerHeight()});
+		$content.animate({top: mbHeight});
 	}
 	else {
 		$mb.css({display: 'block', position: 'static', top: 0});
-		$content.css({top: $mb.outerHeight()});
+		$content.css({top: mbHeight});
 	}
 }
 function hideMenuBar (animate) {
@@ -94,8 +157,11 @@ function hideMenuBar (animate) {
 	}
 }
 
+////////////////////////
+// Menu Button
+
 function showMenuButton (animate) {
-    var $btn = $('#menu-btn').stop(),
+    var $btn = $('#menu-btn').stop().removeClass('hidden'),
 		style = $btn[0].style,
 		sideX = (style.left && style.left !== 'auto') ? 'left' : 'right',
 		sideY = (style.top && style.top !== 'auto') ? 'top' : 'bottom',
@@ -117,7 +183,7 @@ function showMenuButton (animate) {
 	}
 }
 function hideMenuButton (animate) {
-	var $btn = $('#menu-btn').stop();
+	var $btn = $('#menu-btn').stop().addClass('hidden');
 	if (animate) {
 		var halfSize = $btn.outerWidth() / 2,
 			style = $btn[0].style,
@@ -138,12 +204,13 @@ function hideMenuButton (animate) {
 }
 
 function menuButtonClick () {
+	// releasing drag over button produces a click
 	if ($(this).hasClass('dragging')) {
-		$(this).removeClass('dragging');
 		return;
 	}
 	hideMenuButton(true);
 	showMenuBar(true);
+	saveMenuState();
 }
 function menuButtonMouseDown (e) {
 	var $btn = $(this),
@@ -153,7 +220,7 @@ function menuButtonMouseDown (e) {
 		startedDrag = false;
 
 	function drag (e) {
-		// prevent selecting
+		// prevent page selection during drag
 		e.stopPropagation();
 		e.preventDefault();
 
@@ -172,6 +239,11 @@ function menuButtonMouseDown (e) {
 	}
 
 	function drop (e) {
+		// remove "dragging" class after click event runs
+		setTimeout(function () {
+			$btn.removeClass('dragging');
+		}, 0);
+
 		var $doc = $(document);
 		$doc
 			.off('mousemove', drag)
@@ -191,7 +263,8 @@ function menuButtonMouseDown (e) {
                 top: 'auto',
                 bottom: $doc.outerHeight() - top - size
             })
-        }
+		}
+		saveMenuState();
 	}
 
 	$(document)
