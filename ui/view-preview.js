@@ -66,8 +66,8 @@ function sandboxContent (content) {
 	}
 	headStart = contentL.indexOf('>', headStart)+1;
 
-	var newHead = '<base href="' + window.location.origin + '/run/'
-		+ projects.current.id + _view.path + '">\
+	var newHead = '<base href="' + window.location.origin + '/run/v'
+		+ new Date().getTime() + '/' + projects.current.id + _view.path + '">\
 	<script>\
 	function receiveMessage(event) {\
 		document.open();\

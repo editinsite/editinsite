@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"unicode"
 
 	"github.com/editinsite/editinsite/config"
 	"github.com/editinsite/editinsite/projects"
@@ -110,7 +111,10 @@ func handleFile(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleRun(w http.ResponseWriter, r *http.Request) {
-	path := r.URL.Path[len("/run/"):]
+	// Path can have a version string to prevent caching in browser/proxy.
+	// We just have to ignore it.
+	path := stripVersion(r.URL.Path[len("/run/"):])
+
 	project, path := parseProject(w, r, path)
 	if project == nil {
 		return
@@ -204,4 +208,17 @@ func parsePath(w http.ResponseWriter, r *http.Request, p *projects.Workspace, pa
 		}
 	}
 	return path, isDir
+}
+
+// stripVersion takes a path and removes the initial "vNXXXX/" string.
+// The N is any digit, and X is any character.
+func stripVersion(path string) string {
+	if len(path) > 2 && path[0] == 'v' && unicode.IsDigit(rune(path[1])) {
+		end := strings.IndexByte(path, '/')
+		if end != -1 && end < len(path)-1 {
+			return path[end+1:]
+		}
+		return ""
+	}
+	return path
 }
